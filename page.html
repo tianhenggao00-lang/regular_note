@@ -834,15 +834,15 @@ body.dark-disabled .water-btns .wb{
   box-shadow:0 4px 16px rgba(91,130,166,0.25);
 }
 
-/* ---- 记录中心：8 宫格（4 排 × 2 列白卡，占满整屏） ---- */
-.rg{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(5,1fr);gap:12px;height:calc(100vh - 175px);height:calc(100dvh - 175px)}
+/* ---- 记录中心：10 宫格（2 列撑满主体，底部留日记按钮） ---- */
+.rg{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(5,1fr);gap:10px;height:calc(100vh - 250px);height:calc(100dvh - 250px)}
 /* 记录中心宫格 */
 .rgc{
   background:rgba(255,255,255,0.5) !important;
   backdrop-filter:blur(20px) saturate(180%);
   -webkit-backdrop-filter:blur(20px) saturate(180%);
-  border-radius:20px;
-  padding:14px;
+  border-radius:16px;
+  padding:12px;
   text-align:center;
   border:1px solid rgba(255,255,255,0.7) !important;
   cursor:pointer;
@@ -850,7 +850,7 @@ body.dark-disabled .water-btns .wb{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:8px;
+  gap:5px;
   box-shadow:0 4px 24px rgba(31, 38, 135, 0.08),inset 0 1px 0 rgba(255,255,255,0.9);
   transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -865,7 +865,7 @@ body.dark-disabled .rgc{
 body.dark-disabled .rgc:hover{
   box-shadow:0 12px 40px rgba(0,0,0,0.4);
 }
-.rgc .nm{font-size:26px;font-weight:600;color:#1f2329}
+.rgc .nm{font-size:20px;font-weight:600;color:#1f2329}
 body.dark-disabled .rgc .nm{color:#e6e8eb}
 .rgc .wait{font-size:10px;color:#9ca3af}
 .rgc.no{opacity:.55}
@@ -1241,8 +1241,8 @@ body.dark-disabled .ov .obar{background:#2a2e33}
 .mini-tl i{flex:1;border-radius:3px;min-width:2px}
 .mini-tl i.no{background:#f0f1f3}
 body.dark-disabled .mini-tl i.no{background:#2a2e33}
-.tl-txt{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
-.tl-txt .tt{font-size:10px;padding:1px 5px;border-radius:6px;border:1px solid;line-height:1.4;color:#1f2329}
+.tl-txt{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tl-txt .tt{font-size:13px;padding:3px 8px;border-radius:7px;border:1px solid;line-height:1.5;color:#1f2329}
 body.dark-disabled .tl-txt .tt{color:#e6e8eb}
 
 /* ---- 长远目标（你将成为什么样的人） ---- */
@@ -1393,13 +1393,13 @@ body.dark-disabled .trow.drag{background:#1e2b45}
 <header>
   <h1>自律小记<span id="appVer" style="font-size:10px;color:#9ca3af;font-weight:400;margin-left:6px"></span></h1>
   <div style="display:flex;gap:12px;align-items:center">
-    <button class="iconbtn" onclick="showHelp()" title="帮助">?</button>
-    <button class="iconbtn" onclick="showBackup()" title="数据备份">💾</button>
+    <button class="iconbtn" onclick="showHelp()" title="帮助"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.7 2.2c-.8.4-1.2 1-1.2 1.8v.5"></path><circle cx="12" cy="16.8" r=".4" fill="currentColor"></circle></svg></button>
+    <button class="iconbtn" onclick="showBackup()" title="数据备份"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6"></path><path d="M12 3v13"></path><path d="m7 8 5-5 5 5"></path></svg></button>
     
   </div>
 </header>
 <main id="view"></main>
-<button class="switch" id="switchBtn" onclick="toggleView()" title="切换">⇄</button>
+<button class="switch" id="switchBtn" onclick="toggleView()" title="切换"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7h11"></path><path d="m15 3 4 4-4 4"></path><path d="M16 17H5"></path><path d="m9 13-4 4 4 4"></path></svg></button>
 <nav id="nav"></nav>
 <div id="modal"></div>
 
@@ -1433,7 +1433,8 @@ function migrate(o){
   return o;
 }
 function seed(){return{ver:SCHEMA_VER,tasks:[],cats:['其他','工作','学习','运动','副业'],logs:[],sleep:[],activity:[],plan:[],actTypes:[],hiddenTypes:[],habits:[],meals:[],waters:[],exercise:[],exTypes:[],moneyIncome:0,moneyTypes:[],hiddenMoneyTypes:[],moneyPlans:[],moneyRecords:[],assets:[],memberships:[],savings:[],collects:[],summaries:[],goals:[],dayMarks:{},markTypes:[],memos:[],anniversaries:[],medicals:[],inspirations:[],pinnedAnniv:'',hobbies:[],commonActs:[],dailies:[],obsidian:{vault:'',folder:'Daily',auto:false},syncedDays:{},cloud:{token:'',gistId:'',auto:false,pushed:{}}};}
-function save(){localStorage.setItem(STORE,JSON.stringify(S));}
+// 自动快照：每次保存前把"上一次的数据"存到独立键，误删/误操作后可一键找回
+function save(){try{const prev=localStorage.getItem(STORE);if(prev&&prev!==JSON.stringify(S))localStorage.setItem('sd_snap',prev);}catch(e){}localStorage.setItem(STORE,JSON.stringify(S));}
 function find(id){return S.tasks.find(t=>t.id===id);}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 
@@ -1665,7 +1666,7 @@ function saveGoal(){
   else S.goals.push({id:uid(),text});
   closeModal();save();render();
 }
-function delGoal(id){S.goals=S.goals.filter(x=>x.id!==id);save();render();}
+function delGoal(id){if(!confirm('确定删除这个目标？'))return;S.goals=S.goals.filter(x=>x.id!==id);save();render();}
 // 目标排序拖拽（浮起跟手）：按住 → 卡片提起来跟随手指 → 松手落位
 function gDown(e,i){
   if(!e.target.closest('.g-drag'))return;
@@ -1803,7 +1804,7 @@ function renderPool(){
     html+='<div class="filterbar">';
     html+='<button class="chip '+(filterCat==='全部'?'on':'')+'" onclick="setFilter(\'全部\')">全部</button>';
     S.cats.forEach(c=>{html+='<button class="chip '+(filterCat===c?'on':'')+'" onclick="setFilter(\''+c+'\')">'+c+'</button>';});
-    html+='<button class="chip manage" onclick="showCatManage()">⚙ 分类管理</button>';
+    html+='<button class="chip manage" onclick="showCatManage()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> 分类管理</button>';
     html+='</div>';
   }
   if(list.length===0) html+='<div class="empty">待办池是空的，点上面「＋ 新建任务」</div>';
@@ -2133,7 +2134,7 @@ function showCalMark(){
     +'<button class="newbtn" style="margin-top:4px" onclick="saveAnnivFromCal()">保存纪念日</button>'
     +'</div>';
   h+='<div class="row"><button class="no" onclick="closeModal()">取消</button><button class="ok" onclick="saveCalMark()">保存</button></div>';
-  h+='<div style="text-align:center;margin-top:10px"><button class="chip manage" onclick="showMarkManage()">⚙ 管理备忘类别（名称 / 颜色）</button></div>';
+  h+='<div style="text-align:center;margin-top:10px"><button class="chip manage" onclick="showMarkManage()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>管理备忘类别（名称 / 颜色）</button></div>';
   modal(h);
 }
 function annivDateCtrl2(type){
@@ -2237,7 +2238,7 @@ function saveMark(){
   }
   save();showMarkManage();
 }
-function delMark(id){
+function delMark(id){if(!confirm('确定删除这个备忘类别？'))return;
   if(S.markTypes.length<=1){alert('至少保留一个类别');return;}
   S.markTypes=S.markTypes.filter(x=>x.id!==id);
   S.dayMarks=S.dayMarks||{};
@@ -2629,7 +2630,7 @@ function saveMemo(){
   else S.memos.push({id:uid(),text,due,done:false});
   save();closeModal();render();
 }
-function delMemo(id){S.memos=S.memos.filter(x=>x.id!==id);save();render();}
+function delMemo(id){if(!confirm('确定删除这条备忘？'))return;S.memos=S.memos.filter(x=>x.id!==id);save();render();}
 // 备忘录排序拖拽（浮起跟手 + 让位动画）：按住 ≡ → 卡片提起来跟随手指 → 松手落位
 let mdrag=null;
 const MEMO_ROW_H=56;
@@ -2841,7 +2842,7 @@ function saveAnniv(){
   else S.anniversaries.push({id:uid(),name,type:annivCurType,date,month,n,wday,color:annivColor,note});
   save();closeModal();render();
 }
-function delAnniv(id){S.anniversaries=S.anniversaries.filter(x=>x.id!==id);save();render();}
+function delAnniv(id){if(!confirm('确定删除这个纪念日？'))return;S.anniversaries=S.anniversaries.filter(x=>x.id!==id);save();render();}
 
 // ---- 电子病历 ----
 let medEditId=null;
@@ -2885,7 +2886,7 @@ function saveMedical(){
   else S.medicals.push(Object.assign({id:uid()},rec));
   save();closeModal();render();
 }
-function delMedical(id){S.medicals=S.medicals.filter(x=>x.id!==id);save();render();}
+function delMedical(id){if(!confirm('确定删除这条就诊记录？'))return;S.medicals=S.medicals.filter(x=>x.id!==id);save();render();}
 
 // ---- 灵感库（微信对话式：上方气泡 + 底部输入框） ----
 function insText(s){ if(s.text!=null)return s.text; return (s.title||'')+(s.content?('\n'+s.content):''); }
@@ -2918,7 +2919,7 @@ function sendInspiration(){
   if(msgs){msgs.innerHTML=insBubblesHTML();msgs.scrollTop=msgs.scrollHeight;}
   el.value='';
 }
-function delInspiration(id){S.inspirations=S.inspirations.filter(x=>x.id!==id);save();render();}
+function delInspiration(id){if(!confirm('确定删除这条灵感？'))return;S.inspirations=S.inspirations.filter(x=>x.id!==id);save();render();}
 
 function durMin(bed,wake){
   const [bh,bm]=bed.split(':').map(Number);
@@ -3168,7 +3169,7 @@ function saveSleep(){
   if(rec)syncSleepToAct(rec.id,date,bed,wake);   // 自动写入活动「实际记录」
   closeModal();save();render();
 }
-function delSleep(id){
+function delSleep(id){if(!confirm('确定删除这条睡眠记录？'))return;
   const s=S.sleep.find(x=>x.id===id);
   if(s)S.activity=(S.activity||[]).filter(a=>!(a.autoSleep && a.sleepId===id));  // 同步清理活动（含跨午夜两段）
   S.sleep=S.sleep.filter(x=>x.id!==id);save();render();
@@ -3447,7 +3448,7 @@ function saveCommonAct(){
   else (S.commonActs=S.commonActs||[]).push({id:uid(),name,cat,typeId:caType,last:0});
   save();closeModal();render();
 }
-function delCommonAct(id){
+function delCommonAct(id){if(!confirm('确定删除这个常用活动？'))return;
   S.commonActs=(S.commonActs||[]).filter(x=>x.id!==id);
   if(actT&&actT.id===id){clearInterval(actTimerInt);actTimerInt=null;actT=null;}
   save();render();
@@ -3481,7 +3482,7 @@ function renderActivity(){
   html+='<span class="date">'+shortDate(d)+(d===todayStr()?'（今天）':'')+'</span>';
   html+='<button class="nav" onclick="actShift(1)">›</button>';
   if(d!==todayStr())html+='<button class="today" onclick="actGoToday()">回今天</button>';
-  html+='<button class="chip '+(editMode?'on':'')+'" onclick="toggleEdit()">'+(editMode?'✓ 完成':'✏️ 编辑')+'</button>';
+  html+='<button class="chip '+(editMode?'on':'')+'" onclick="toggleEdit()">'+(editMode?'✓ 完成':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg> 编辑')+'</button>';
   html+='</div>';
   if(editMode)html+='<div class="tip">在「理想安排」或「实际记录」上按住往下拉，松手后输入这段时间在做什么</div>';
 
@@ -3492,7 +3493,7 @@ function renderActivity(){
   html+=sideCol('act','实际记录',actList);
   html+='</div>';
   html+='<div class="tlist">'+getTypes().map(t=>'<span><i style="background:'+t.color+'"></i>'+t.name+'</span>').join('')+'</div>';
-  html+='<div style="text-align:center;margin-top:8px"><button class="chip manage" onclick="showTypeManage()">⚙ 时间类型管理</button></div>';
+  html+='<div style="text-align:center;margin-top:8px"><button class="chip manage" onclick="showTypeManage()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>时间类型管理</button></div>';
   html+='</div>';
   return html;
 }
@@ -3618,7 +3619,7 @@ function saveActModal(){
   dragRange=null;
   closeModal();save();render();
 }
-function delActItem(side,id){
+function delActItem(side,id){if(!confirm('确定删除这条活动记录？'))return;
   if(side==='plan')S.plan=(S.plan||[]).filter(x=>x.id!==id);
   else S.activity=(S.activity||[]).filter(x=>x.id!==id);
   dragRange=null;
@@ -3649,7 +3650,7 @@ function addType(){
   S.actTypes.push({id:'t'+Date.now().toString(36),name,color:nmColor});
   save();showTypeManage();
 }
-function delType(id){
+function delType(id){if(!confirm('确定删除这个时间类型？'))return;
   if(id==='other'){alert('「其他」是兜底类型，不能删除');return;}
   if(DEF_TYPES.find(d=>d.id===id)){
     S.hiddenTypes=S.hiddenTypes||[];
@@ -3796,7 +3797,7 @@ function hcard(h,vd){
   const today=todayStr();
   const d=vd||today;
   const touched=(h.doneDates||[]).includes(d);
-  const edit='<span class="edit" onclick="event.stopPropagation();showHabit(\''+h.id+'\')">✎</span>';
+  const edit='<span class="edit" onclick="event.stopPropagation();showHabit(\''+h.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></span>';
   const db=d===today?('toggleHabit(\''+h.id+'\')'):'alert(\'只能为今天打卡\')';
   if(h.kind==='freq'){
     const c=freqCountAt(h,d);
@@ -3858,7 +3859,7 @@ function saveHabit(){
   }
   closeModal();save();render();
 }
-function delHabit(id){S.habits=S.habits.filter(x=>x.id!==id);save();render();}
+function delHabit(id){if(!confirm('确定删除这个习惯？'))return;S.habits=S.habits.filter(x=>x.id!==id);save();render();}
 
 // ---------- 饮食记录（一日三餐 + 照片 + 健康评估） ----------
 const MEAL_NAMES={breakfast:'早餐',lunch:'午餐',dinner:'晚餐'};
@@ -3899,7 +3900,7 @@ function waterCard(date){
   const w=(S.waters||[]).find(x=>x.date===date);
   const lv=w?WATER_LEVELS.find(v=>v.id===w.level):null;
   let c='<div class="card water">';
-  c+='<div class="water-row"><span class="water-lb">💧 饮水</span>'+(lv?'<span class="water-now" style="color:'+lv.color+'">'+lv.name+'</span>':'<span class="water-now muted">还没记录</span>')+'</div>';
+  c+='<div class="water-row"><span class="water-lb"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><path d="M12 2.69 17.66 8.35a8 8 0 1 1-11.31 0Z"></path></svg> 饮水</span>'+(lv?'<span class="water-now" style="color:'+lv.color+'">'+lv.name+'</span>':'<span class="water-now muted">还没记录</span>')+'</div>';
   c+='<div class="water-btns">';
   WATER_LEVELS.forEach(v=>{
     c+='<button class="wb'+(lv&&lv.id===v.id?' on':'')+'" style="'+(lv&&lv.id===v.id?'background:'+v.color+';border-color:'+v.color+';color:#fff':'')+'" onclick="setWater(\''+v.id+'\')">'+v.name+'</button>';
@@ -3982,7 +3983,7 @@ function saveMeal(){
   else{S.meals.push(Object.assign({id:uid(),date:mlDate,meal:mlMeal},rec));}
   closeModal();save();render();
 }
-function delMeal(id){S.meals=S.meals.filter(x=>x.id!==id);save();render();}
+function delMeal(id){if(!confirm('确定删除这条饮食记录？'))return;S.meals=S.meals.filter(x=>x.id!==id);save();render();}
 function mealShift(n){mealDate=shiftDate(mealDate,n);render();}
 function mealGoToday(){mealDate=todayStr();render();}
 
@@ -4117,7 +4118,7 @@ function renderExWeek(){
   }
   h+='</div></div>';
   h+='<div class="ex-total"><div class="l">本周合计</div><div class="v">'+fmtDur(st.weekTotal)+'</div><div class="s">'+(st.weekTotal?'平均每天 '+fmtDur(Math.round(st.weekTotal/7)):'这周还没动起来')+'</div></div>';
-  h+='<div style="text-align:center;margin-top:10px"><button class="chip manage" onclick="showExTypeManage()">⚙ 运动类型管理</button></div>';
+  h+='<div style="text-align:center;margin-top:10px"><button class="chip manage" onclick="showExTypeManage()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>运动类型管理</button></div>';
   return h;
 }
 function showExDay(ds){
@@ -4178,7 +4179,7 @@ function saveEx(){
   syncExToAct(date,oldDate);   // 自动写入活动「实际记录」
   closeModal();save();render();
 }
-function delEx(id){
+function delEx(id){if(!confirm('确定删除这条锻炼记录？'))return;
   const x=S.exercise.find(v=>v.id===id);
   S.exercise=S.exercise.filter(v=>v.id!==id);
   if(x)syncExToAct(x.date,x.date);   // 同步清理活动
@@ -4220,7 +4221,7 @@ function addExType(){
   S.exTypes.push({id:'e'+Date.now().toString(36),name,color:exNmColor});
   save();showExTypeManage();
 }
-function delExType(id){
+function delExType(id){if(!confirm('确定删除这个运动类型？'))return;
   S.exTypes=S.exTypes||[];
   if(!S.exTypes.length){alert('没有自定义类型可删除');return;}
   S.exTypes=S.exTypes.filter(t=>t.id!==id);
@@ -4346,7 +4347,7 @@ function saveMoney(){
   }
   closeModal();save();render();
 }
-function delMoney(id){S.moneyRecords=S.moneyRecords.filter(v=>v.id!==id);save();render();}
+function delMoney(id){if(!confirm('确定删除这笔账？'))return;S.moneyRecords=S.moneyRecords.filter(v=>v.id!==id);save();render();}
 
 // ---- 月度规划视图 ----
 function renderMoneyPlan(){
@@ -4455,7 +4456,7 @@ function savePlan(){
   }
   closeModal();save();render();
 }
-function delPlan(id){S.moneyPlans=S.moneyPlans.filter(v=>v.id!==id);save();render();}
+function delPlan(id){if(!confirm('确定删除这个月度规划？'))return;S.moneyPlans=S.moneyPlans.filter(v=>v.id!==id);save();render();}
 
 // ---- 资产总览（资产 + 会员，含总资产与今日成本） ----
 let aEditId=null,aName='',aPrice='',aBuy='';
@@ -4492,12 +4493,12 @@ function renderMoneyAsset(){
 function showAsset(id){const a=id?S.assets.find(v=>v.id===id):null;aEditId=id||null;aName=a?(a.name||''):'';aPrice=a?String(a.price||''):'';aBuy=a?a.buyDate:todayStr();renderAssetModal();}
 function renderAssetModal(){let h='<h3>'+(aEditId?'编辑':'新增')+'资产</h3>';h+='<label>名称</label><input id="a_name" value="'+esc(aName)+'" placeholder="如：iPhone / 笔记本">';h+='<label>购买价格（元）</label><input id="a_price" type="number" step="0.01" min="0" value="'+aPrice+'" placeholder="如：8000">';h+='<label>购买日期</label><input id="a_buy" type="date" value="'+aBuy+'">';h+='<div class="row"><button class="no" onclick="closeModal()">取消</button><button class="ok" onclick="saveAsset()">保存</button></div>';modal(h);}
 function saveAsset(){const name=document.getElementById('a_name').value.trim();if(!name){alert('请填写名称');return;}const price=parseFloat(document.getElementById('a_price').value);if(isNaN(price)||price<0){alert('请填写正确价格');return;}const buy=document.getElementById('a_buy').value||todayStr();const obj={name,price,buyDate:buy};if(aEditId){const t=S.assets.find(v=>v.id===aEditId);if(t)Object.assign(t,obj);}else{S.assets.push(Object.assign({id:uid()},obj));}closeModal();save();render();}
-function delAsset(id){S.assets=S.assets.filter(v=>v.id!==id);save();render();}
+function delAsset(id){if(!confirm('确定删除这个资产？'))return;S.assets=S.assets.filter(v=>v.id!==id);save();render();}
 function showMember(id){const m=id?S.memberships.find(v=>v.id===id):null;mEditId=id||null;mName=m?(m.name||''):'';mPrice=m?String(m.price||''):'';mPeriod=m?(m.period||'month'):'month';mStart=m?m.start:todayStr();renderMemberModal();}
 function renderMemberModal(){let h='<h3>'+(mEditId?'编辑':'新增')+'会员</h3>';h+='<label>名称</label><input id="m2_name" value="'+esc(mName)+'" placeholder="如：视频会员 / 健身房">';h+='<label>价格（元）</label><input id="m2_price" type="number" step="0.01" min="0" value="'+mPrice+'" placeholder="如：198">';h+='<label>周期</label><div class="seg"><button class="'+(mPeriod==='month'?'on':'')+'" onclick="setMemPeriod(\'month\')">每月</button><button class="'+(mPeriod==='year'?'on':'')+'" onclick="setMemPeriod(\'year\')">每年</button></div>';h+='<label>开始日期</label><input id="m2_start" type="date" value="'+mStart+'">';h+='<div class="row"><button class="no" onclick="closeModal()">取消</button><button class="ok" onclick="saveMember()">保存</button></div>';modal(h);}
 function setMemPeriod(p){const pr=document.getElementById('m2_price');if(pr)mPrice=pr.value;const st=document.getElementById('m2_start');if(st)mStart=st.value;mPeriod=p;renderMemberModal();}
 function saveMember(){const name=document.getElementById('m2_name').value.trim();if(!name){alert('请填写名称');return;}const price=parseFloat(document.getElementById('m2_price').value);if(isNaN(price)||price<0){alert('请填写正确价格');return;}const start=document.getElementById('m2_start').value||todayStr();const obj={name,price,period:mPeriod,start};if(mEditId){const t=S.memberships.find(v=>v.id===mEditId);if(t)Object.assign(t,obj);}else{S.memberships.push(Object.assign({id:uid()},obj));}closeModal();save();render();}
-function delMember(id){S.memberships=S.memberships.filter(v=>v.id!==id);save();render();}
+function delMember(id){if(!confirm('确定删除这个会员？'))return;S.memberships=S.memberships.filter(v=>v.id!==id);save();render();}
 
 // ---- 日用品（记录每件日用品的成本，按"元/天"估算与校准；分类别 + 按平均计） ----
 let dEditId=null, dPrice='', dBuy='', dEnd='', dEst='', dCat='护肤品', dAvg=false;
@@ -4653,7 +4654,7 @@ function saveDailyEnd(id){
   if(v<d.buyDate){alert('用完日不能早于购买日');return;}
   d.endDate=v;save();closeModal();render();
 }
-function delDaily(id){
+function delDaily(id){if(!confirm('确定删除这条日用品记录？'))return;
   S.dailies=(S.dailies||[]).filter(x=>x.id!==id);
   save();render();
 }
@@ -4686,7 +4687,7 @@ function renderMoneySave(){
 function showSave(id){const g=id?S.savings.find(v=>v.id===id):null;sEditId=id||null;sName=g?(g.name||''):'';sTarget=g?String(g.target||''):'';sCurrent=g?String(g.current||''):'';sDeadline=g?g.deadline:'';renderSaveModal();}
 function renderSaveModal(){let h='<h3>'+(sEditId?'编辑':'新增')+'存钱计划</h3>';h+='<label>目标名称</label><input id="s_name" value="'+esc(sName)+'" placeholder="如：旅行基金 / 买电脑">';h+='<label>目标金额（元）</label><input id="s_target" type="number" step="0.01" min="0" value="'+sTarget+'" placeholder="如：10000">';h+='<label>已存金额（元）</label><input id="s_current" type="number" step="0.01" min="0" value="'+sCurrent+'" placeholder="如：0">';h+='<label>目标日期（可选）</label><input id="s_deadline" type="date" value="'+sDeadline+'">';h+='<div class="row"><button class="no" onclick="closeModal()">取消</button><button class="ok" onclick="saveSave()">保存</button></div>';modal(h);}
 function saveSave(){const name=document.getElementById('s_name').value.trim();if(!name){alert('请填写目标名称');return;}const target=parseFloat(document.getElementById('s_target').value);if(isNaN(target)||target<=0){alert('请填写正确目标金额');return;}const current=parseFloat(document.getElementById('s_current').value)||0;const deadline=document.getElementById('s_deadline').value||'';const obj={name,target,current,deadline};if(sEditId){const t=S.savings.find(v=>v.id===sEditId);if(t)Object.assign(t,obj);}else{S.savings.push(Object.assign({id:uid()},obj));}closeModal();save();render();}
-function delSave(id){S.savings=S.savings.filter(v=>v.id!==id);save();render();}
+function delSave(id){if(!confirm('确定删除这个存钱计划？'))return;S.savings=S.savings.filter(v=>v.id!==id);save();render();}
 function showDeposit(id){const g=S.savings.find(v=>v.id===id);if(!g)return;depId=id;let h='<h3>存入 · '+esc(g.name)+'</h3>';h+='<label>存入金额（元）</label><input id="dep_amt" type="number" step="0.01" min="0" placeholder="如：200">';h+='<div class="row"><button class="no" onclick="closeModal()">取消</button><button class="ok" onclick="saveDeposit()">存入</button></div>';modal(h);}
 function saveDeposit(){const g=S.savings.find(v=>v.id===depId);if(!g)return;const amt=parseFloat(document.getElementById('dep_amt').value);if(isNaN(amt)||amt<=0){alert('请填写正确金额');return;}g.current=(Number(g.current)||0)+amt;closeModal();save();render();}
 
@@ -4714,7 +4715,7 @@ function addMoneyType(){
   S.moneyTypes.push({id:'m'+Date.now().toString(36),name,color:mnNmColor});
   save();showMoneyTypeManage();
 }
-function delMoneyType(id){
+function delMoneyType(id){if(!confirm('确定删除这个账目类型？'))return;
   if(id==='other'){alert('「其他」是兜底类型，不能删除');return;}
   if(DEF_MONEY_TYPES.find(d=>d.id===id)){
     S.hiddenMoneyTypes=S.hiddenMoneyTypes||[];
@@ -4792,7 +4793,7 @@ function saveHobby(){
   save();closeModal();render();
 }
 function toggleHobbyStatus(id){const x=S.hobbies.find(v=>v.id===id);if(!x)return;x.status=x.status==='hold'?'doing':'hold';save();render();}
-function delHobby(id){S.hobbies=S.hobbies.filter(x=>x.id!==id);save();render();}
+function delHobby(id){if(!confirm('确定删除这个爱好？'))return;S.hobbies=S.hobbies.filter(x=>x.id!==id);save();render();}
 function hbyDateTxt(ds){
   if(!ds)return '';
   const p=ds.split('-').map(Number);
@@ -4853,7 +4854,7 @@ function saveCollect(){
   }
   closeModal();save();render();
 }
-function delCollect(id){S.collects=S.collects.filter(v=>v.id!==id);save();render();}
+function delCollect(id){if(!confirm('确定删除这个收藏？'))return;S.collects=S.collects.filter(v=>v.id!==id);save();render();}
 
 // ---------- 总结（每日日记 + 情绪标记） ----------
 const SUMM_MOODS=[
@@ -5065,7 +5066,7 @@ function cancelAssign(id){
   t.todayPlan=null;t.doneDate=null;t.failDate=null;
   save();render();
 }
-function delTask(id){S.tasks=S.tasks.filter(t=>t.id!==id);save();render();}
+function delTask(id){if(!confirm('确定删除这个任务？'))return;S.tasks=S.tasks.filter(t=>t.id!==id);save();render();}
 
 function doSuccess(id){
   const t=find(id);
@@ -5172,7 +5173,7 @@ function showCatManage(){
   modal(html);
 }
 function addCat(){const v=document.getElementById('newcat').value.trim();if(v&&!S.cats.includes(v)){S.cats.push(v);save();}showCatManage();}
-function delCat(c){if(S.cats.length<=1)return;S.cats=S.cats.filter(x=>x!==c);S.tasks.forEach(t=>{if(t.category===c)t.category='其他';});save();showCatManage();}
+function delCat(c){if(!confirm('确定删除这个分类？'))return;if(S.cats.length<=1)return;S.cats=S.cats.filter(x=>x!==c);S.tasks.forEach(t=>{if(t.category===c)t.category='其他';});save();showCatManage();}
 
 // ---------- 弹窗 ----------
 function modal(html){document.getElementById('modal').innerHTML='<div class="mask" onclick="if(event.target.classList.contains(\'mask\'))closeModal()"><div class="box" onclick="event.stopPropagation()">'+html+'</div></div>';}
@@ -5212,6 +5213,18 @@ function showBackup(){
   h+='<label style="margin-top:10px">导入：粘贴备份文本，点「恢复备份」（会覆盖当前全部数据）</label>';
   h+='<textarea id="bk_in" placeholder="粘贴备份文本…" style="height:48px;font-size:10px"></textarea>';
   h+='<div class="row"><button class="no" onclick="closeModal()">关闭</button><button class="ok" style="background:#ef4444" onclick="importBackup()">恢复备份</button></div>';
+  // ---- 自动快照（防误删/误操作，每次保存自动留上一份）----
+  const snap=localStorage.getItem('sd_snap');
+  h+='<hr><h3 style="margin-top:14px">自动快照 <span style="font-weight:400;font-size:11px;color:#6b7280">防误删</span></h3>';
+  if(snap){
+    let snapInfo='已存在';
+    try{const so=JSON.parse(snap);snapInfo='含任务 '+so.tasks.length+' · 备忘 '+(so.memos||[]).length+' · 记录 '+(so.logs||[]).length+' 条';}catch(e){}
+    h+='<div class="tip-mini" style="margin-bottom:6px">每次保存数据时自动保留「上一次」的副本。万一误删 / 误操作，可一键找回。</div>';
+    h+='<div class="tip-mini" style="color:#5B82A6;margin-bottom:6px">快照：'+snapInfo+'</div>';
+    h+='<div class="row"><button class="ok" onclick="restoreSnap()">恢复自动快照</button><button class="no" onclick="clearSnap()">清空快照</button></div>';
+  }else{
+    h+='<div class="tip-mini" style="margin-bottom:4px">尚未生成。每次保存数据时自动保留「上一次」的副本，误删可一键找回。</div>';
+  }
   h+='</div>';
   // ---- Obsidian 自动同步配置 ----
   const ob=S.obsidian||{vault:'',folder:'Daily',auto:false};
@@ -5245,9 +5258,27 @@ function importBackup(){
   try{obj=JSON.parse(v);}catch(e){alert('文本不是有效的备份格式');return;}
   if(!obj||typeof obj!=='object'||!Array.isArray(obj.tasks)){alert('内容不是备份数据');return;}
   if(!confirm('恢复将覆盖当前全部数据，确定？'))return;
+  try{localStorage.setItem('sd_snap',JSON.stringify(S));}catch(e){}
   S=obj;
   S.cats=S.cats&&S.cats.length?S.cats:['其他','工作','学习','运动','副业'];
   save();closeModal();render();
+}
+// 恢复自动快照（找回上一次保存的数据）
+function restoreSnap(){
+  const snap=localStorage.getItem('sd_snap');
+  if(!snap){alert('没有可恢复的快照');return;}
+  if(!confirm('将用快照覆盖当前数据。当前数据会先存入快照，不会丢失。确定？'))return;
+  try{localStorage.setItem('sd_snap',JSON.stringify(S));}catch(e){}
+  try{S=JSON.parse(snap);}catch(e){alert('快照损坏，无法恢复');return;}
+  S.cats=S.cats&&S.cats.length?S.cats:['其他','工作','学习','运动','副业'];
+  save();closeModal();render();
+  alert('已恢复自动快照');
+}
+// 清空自动快照
+function clearSnap(){
+  if(!confirm('确定清空自动快照？'))return;
+  localStorage.removeItem('sd_snap');
+  showBackup();
 }
 function toggleBackupSec(){
   const s=document.getElementById('bk_sec');
@@ -5294,7 +5325,8 @@ bindSwipe();
 autoSyncCheck();
 autoCloudCheck();
 setInterval(function(){autoSyncCheck();autoCloudCheck();},60000);
-document.getElementById('appVer').textContent='v35';
+const APP_VER='v4';  // 版本号：与 git 标签同步，发版时更新
+document.getElementById('appVer').textContent=APP_VER;
 </script>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script>
 </body>
