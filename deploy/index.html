@@ -299,12 +299,15 @@ body.dark-disabled .btn{
   display:flex;
   align-items:center;
   justify-content:center;
-  transition:all 0.3s ease;
+  transition:transform .2s ease,box-shadow .2s ease;
 }
 .switch:hover{
-  transform:scale(1.1) rotate(15deg);
+  transform:scale(1.08);
   box-shadow:0 12px 40px rgba(0,0,0,0.25);
 }
+/* 待办池 / 每日待办 切换时内容滑入动画 */
+@keyframes viewSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#view.swap{animation:viewSlide .22s ease}
 body.dark-disabled .switch{
   background:rgba(91,130,166,0.8) !important;
   box-shadow:0 8px 32px rgba(91,130,166,0.3);
@@ -694,6 +697,10 @@ body.dark-disabled .tl-side-label{background:rgba(24,27,31,.92);border-color:#2a
 .tip{text-align:center;font-size:11px;color:#6b7280;background:#E9F0F7;border-radius:8px;padding:6px;margin-bottom:10px}
 body.dark-disabled .tip{background:#2a2e44;color:#a5b4fc}
 .actbar{display:flex;align-items:center;justify-content:center;gap:6px;margin:-4px 0 10px;flex-wrap:wrap}
+/* 分类太多时：单行横向滚动，不换行挤占垂直空间 */
+.cats-scroll{display:flex;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding:2px 0 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cats-scroll::-webkit-scrollbar{display:none}
+.cats-scroll .chip{flex:0 0 auto;white-space:nowrap}
 .actbar.tight{gap:5px}
 .actbar.tight .chip{font-size:12px;padding:4px 9px;white-space:nowrap}
 .actbar .date{font-size:14px;font-weight:600;min-width:120px;text-align:center}
@@ -1452,7 +1459,7 @@ function migrate(o){
   if(Array.isArray(o.meals))o.meals.forEach(m=>{if(m)m.img='';});
   return o;
 }
-function seed(){return{ver:SCHEMA_VER,tasks:[],cats:['其他','工作','学习','运动','副业'],logs:[],sleep:[],activity:[],plan:[],actTypes:[],hiddenTypes:[],habits:[],meals:[],waters:[],exercise:[],exTypes:[],moneyIncome:0,moneyTypes:[],hiddenMoneyTypes:[],moneyPlans:[],moneyRecords:[],assets:[],memberships:[],savings:[],collects:[],summaries:[],goals:[],dayMarks:{},markTypes:[],memos:[],anniversaries:[],medicals:[],inspirations:[],pinnedAnniv:'',hobbies:[],commonActs:[],dailies:[],obsidian:{vault:'',folder:'Daily',auto:false},syncedDays:{},cloud:{token:'',gistId:'',auto:false,pushed:{}}};}
+function seed(){return{ver:SCHEMA_VER,tasks:[],cats:['其他','工作','学习','运动','副业'],logs:[],sleep:[],activity:[],plan:[],actTypes:[],hiddenTypes:[],habits:[],meals:[],waters:[],exercise:[],exTypes:[],moneyIncome:0,moneyTypes:[],hiddenMoneyTypes:[],moneyPlans:[],moneyRecords:[],assets:[],memberships:[],savings:[],collects:[],summaries:[],goals:[],dayMarks:{},markTypes:[],memos:[],anniversaries:[],medicals:[],inspirations:[],pinnedAnniv:'',hobbies:[],commonActs:[],dailies:[],dailyCats:[],obsidian:{vault:'',folder:'Daily',auto:false},syncedDays:{},cloud:{token:'',gistId:'',auto:false,pushed:{}}};}
 // 自动快照：每次保存前把"上一次的数据"存到独立键，误删/误操作后可一键找回
 function save(){try{const prev=localStorage.getItem(STORE);if(prev&&prev!==JSON.stringify(S))localStorage.setItem('sd_snap',prev);}catch(e){}localStorage.setItem(STORE,JSON.stringify(S));}
 function find(id){return S.tasks.find(t=>t.id===id);}
@@ -3164,7 +3171,7 @@ function getTypes(){return DEF_TYPES.concat((S.actTypes||[]).filter(t=>!DEF_TYPE
 // ---------- 活动模块（常用活动 / 活动表 两个子页） ----------
 function renderActivityModule(){
   const sub=actSub==='table'?'table':'common';
-  let h='<div class="actbar"><button class="chip '+(sub==='common'?'on':'')+'" onclick="setActSub(\'common\')">常用活动</button><button class="chip '+(sub==='table'?'on':'')+'" onclick="setActSub(\'table\')">活动表</button></div>';
+  let h=segc([{id:'common',name:'常用活动'},{id:'table',name:'活动表'}],sub,'setActSub');
   h+=(sub==='common')?renderCommonActs():renderActivity();
   return h;
 }
@@ -3178,8 +3185,8 @@ let actTimerInt=null;
 function renderCommonActs(){
   S.commonActs=S.commonActs||[];
   const cats=['全部'].concat((S.commonActs||[]).map(a=>a.cat).filter((v,i,arr)=>v&&arr.indexOf(v)===i));
-  let h='<div class="actbar">';
-  cats.forEach(c=>{h+='<button class="chip '+(caFilter===c?'on':'')+'" onclick="setCaFilter(\''+c+'\')">'+esc(c)+'</button>';});
+  let h='<div class="actbar cats-scroll">';
+  cats.forEach(c=>{h+='<button class="chip'+(caFilter===c?' on':'')+'" onclick="setCaFilter(\''+c+'\')">'+esc(c)+'</button>';});
   h+='</div>';
   h+='<button class="newbtn" onclick="showCommonAct(null)">＋ 添加常用活动</button>';
   if(!S.commonActs.length)h+='<div class="empty">还没有常用活动<br>把常做的事（如跑步、阅读、练琴）加进来<br>单击编辑 · 双击计时</div>';
@@ -3228,7 +3235,7 @@ function caDown(e,i){
   if(e.target.closest('.m-del')||e.target.closest('.ca-act'))return;
   const rows=document.querySelectorAll('#caList .ca-card');
   const el=rows[i];if(!el)return;
-  const id=(S.commonActs||[])[i]&&(S.commonActs||[])[i].id;
+  const id=el.dataset.id||'';   // 用卡片 data-id，避免分类过滤后索引错位点错卡
   // 双击判定：基于按下时间间隔（手机上比 click 合成事件可靠得多）
   const now=Date.now();
   if(now-(window.__caDownLast||0)<120)return;   // 双保险：同一物理点击 120ms 内只处理一次
@@ -3242,7 +3249,7 @@ function caDown(e,i){
     clearTimeout(caTapTimer);
     caTapTimer=setTimeout(()=>{caTapT=0;caTapId='';if(!cad||!cad.active)showCommonAct(id);},CA_SINGLE_MS);
   }
-  cad={i,startX:evX(e),startY:evY(e),offsetX:0,offsetY:0,active:false,slid:false,cur:i,el};
+  cad={i,id,startX:evX(e),startY:evY(e),offsetX:0,offsetY:0,active:false,slid:false,cur:i,el,list:(S.commonActs||[]).filter(a=>caFilter==='全部'||a.cat===caFilter)};
   clearTimeout(caHoldTimer);
   caHoldTimer=setTimeout(()=>{
     if(!cad||cad.active||cad.slid)return;
@@ -3268,7 +3275,7 @@ function caMove(e){
   }
   if(e.cancelable)e.preventDefault();
   const rows=document.querySelectorAll('#caList .ca-card');
-  const list=S.commonActs||[];
+  const list=cad.list&&cad.list.length?cad.list:(S.commonActs||[]);
   if(!list.length)return;
   const h=k=>((rows[k]&&rows[k].offsetHeight)||CA_ROW_H);
   const COLS=2;
@@ -3295,13 +3302,19 @@ function caUp(){
   clearTimeout(caHoldTimer);
   const moved=cad.active;
   if(moved){
+    const disp=cad.list&&cad.list.length?cad.list:(S.commonActs||[]);
     const i=cad.i,cur=(cad.cur!==undefined?cad.cur:i);
+    const target=Math.max(0,Math.min(disp.length-1,cur));
+    const srcId=cad.id||'', dstId=disp[target]?(disp[target].id||''):'';
     const list=S.commonActs||[];
-    const target=Math.max(0,Math.min(list.length-1,cur));
-    if(target!==i){
-      const [it]=list.splice(i,1);
-      list.splice(target,0,it);
-      save();
+    const src=srcId?list.findIndex(x=>x.id===srcId):-1;
+    if(src>=0&&dstId&&dstId!==srcId){
+      const dst=list.findIndex(x=>x.id===dstId);
+      if(dst>=0){
+        const [it]=list.splice(src,1);
+        list.splice(dst,0,it);
+        save();
+      }
     }
     caSupress=true;    // 吞掉拖拽后的合成 click
   }
@@ -3397,7 +3410,7 @@ function showCommonAct(id){
   h+='<label>类别（分组显示用）</label><div class="filterbar" id="ca_cats">'+cats.map(c=>'<button class="chip'+(caCat===c?' on':'')+'" data-c="'+esc(c)+'" onclick="setCaCat(\''+esc(c).replace(/'/g,'\\\'')+'\')">'+esc(c)+'</button>').join('')
     +'<button class="chip'+(caCat==='__new'?' on':'')+'" data-c="__new" onclick="setCaCat(\'__new\')">＋ 新建</button></div>'
     +'<input id="ca_cat_new" placeholder="输入新类别名" style="'+(caCat==='__new'?'':'display:none')+'">';
-  h+='<label>时间类型（停止后计入时间表实际记录）</label><div class="filterbar" id="ca_types">'+getTypes().map(t=>'<button class="chip'+(caType===t.id?' on':'')+'" onclick="setCaType(\''+t.id+'\')"><i class="dot" style="background:'+t.color+'"></i>'+t.name+'</button>').join('')+'</div>';
+  h+='<label>时间类型（停止后计入时间表实际记录）</label><div class="filterbar" id="ca_types">'+getTypes().map(t=>'<button class="chip'+(caType===t.id?' on':'')+'" data-t="'+t.id+'" onclick="setCaType(\''+t.id+'\')"><i class="dot" style="background:'+t.color+'"></i>'+t.name+'</button>').join('')+'</div>';
   h+='<div class="row"><button class="no" onclick="closeModal()">取消</button><button class="ok" onclick="saveCommonAct()">保存</button></div>';
   modal(h);
 }
@@ -3409,8 +3422,7 @@ function setCaCat(c){
 }
 function setCaType(t){
   caType=t;
-  const el=document.getElementById('ca_types');
-  if(el)el.innerHTML=getTypes().map(tp=>'<button class="chip'+(caType===tp.id?' on':'')+'" onclick="setCaType(\''+tp.id+'\')"><i class="dot" style="background:'+tp.color+'"></i>'+tp.name+'</button>').join('');
+  document.querySelectorAll('#ca_types .chip').forEach(ch=>ch.classList.toggle('on',ch.getAttribute('data-t')===t));
 }
 function saveCommonAct(){
   const name=document.getElementById('ca_name').value.trim();
@@ -3572,9 +3584,9 @@ function actModal(side,id){
 function renderTypesSel(){
   const el=document.getElementById('am_types');
   if(!el)return;
-  el.innerHTML=getTypes().map(t=>'<button class="chip '+(actSelType===t.id?'on':'')+'" onclick="setActType(\''+t.id+'\')"><i class="dot" style="background:'+t.color+'"></i>'+t.name+'</button>').join('');
+  el.innerHTML=getTypes().map(t=>'<button class="chip'+(actSelType===t.id?' on':'')+'" data-t="'+t.id+'" onclick="setActType(\''+t.id+'\')"><i class="dot" style="background:'+t.color+'"></i>'+t.name+'</button>').join('');
 }
-function setActType(id){actSelType=id;renderTypesSel();}
+function setActType(id){actSelType=id;document.querySelectorAll('#am_types .chip').forEach(ch=>ch.classList.toggle('on',ch.getAttribute('data-t')===id));}
 function saveActModal(){
   const start=normTime(document.getElementById('am_start').value);
   const end=normTime(document.getElementById('am_end').value);
@@ -3684,7 +3696,7 @@ let yvHabit='';         // 年视图选中的习惯 id
 function renderHabit(){
   S.habits=S.habits||[];
   const today=todayStr();
-  let html='<div class="actbar"><button class="chip '+(habitSub==='daily'?'on':'')+'" onclick="habitSub=\'daily\';render()">日常打卡</button><button class="chip '+(habitSub==='year'?'on':'')+'" onclick="habitSub=\'year\';render()">年视图</button></div>';
+  let html=segc([{id:'daily',name:'日常打卡'},{id:'year',name:'年视图'}],habitSub,'setHabitSub');
   if(habitSub==='year')return html+renderHabitYear();
   const d=habitDate||todayStr();
   const daily=S.habits.filter(h=>h.kind!=='freq');
@@ -3710,6 +3722,7 @@ function renderHabit(){
 }
 function habitShift(n){habitDate=shiftDate(habitDate||todayStr(),n);render();}
 function habitGoToday(){habitDate=todayStr();render();}
+function setHabitSub(s){habitSub=s;render();}
 // 习惯年视图：365 格（7 行周 × 周数列），打卡日染绿，底部年度统计
 function renderHabitYear(){
   const habits=(S.habits||[]).slice();
@@ -3720,7 +3733,7 @@ function renderHabitYear(){
   const today=todayStr();
   const pad=x=>String(x).padStart(2,'0');
   const daysInYear=((year%4===0&&year%100!==0)||year%400===0)?366:365;
-  let s='<div class="actbar">'+habits.map(x=>'<button class="chip '+(x.id===yvHabit?'on':'')+'" onclick="yvHabit=\''+x.id+'\';render()">'+esc(x.name)+'</button>').join('')+'</div>';
+  let s='<div class="actbar cats-scroll">'+habits.map(x=>'<button class="chip'+(x.id===yvHabit?' on':'')+'" onclick="yvHabit=\''+x.id+'\';render()">'+esc(x.name)+'</button>').join('')+'</div>';
   s+='<div class="yv-wrap"><div class="yv-title">'+year+' 年 · '+esc(h.name)+'</div>';
   // 365 格热力图（每月 2 排 × 16 列，显式定位行列，空位留空、不写日期数字）
   // 好习惯：打卡=绿；坏习惯：未触犯=白、触犯=红
@@ -4283,7 +4296,7 @@ function showMoney(id,date){
 function renderMoneyModal(){
   let h='<h3>'+(mRecEditId?'编辑':'记一笔')+'消费</h3>';
   h+='<label>日期</label><input id="mr_date" type="date" value="'+mRecDate+'">';
-  h+='<label>消费类型</label><div class="filterbar" id="mr_types">'+getMoneyTypes().map(t=>'<button class="chip '+(mRecType===t.id?'on':'')+'" onclick="setMRecType(\''+t.id+'\')"><i class="dot" style="background:'+t.color+'"></i>'+t.name+'</button>').join('')+'</div>';
+  h+='<label>消费类型</label><div class="filterbar" id="mr_types">'+getMoneyTypes().map(t=>'<button class="chip'+(mRecType===t.id?' on':'')+'" data-t="'+t.id+'" onclick="setMRecType(\''+t.id+'\')"><i class="dot" style="background:'+t.color+'"></i>'+t.name+'</button>').join('')+'</div>';
   h+='<label>金额（元）</label><input id="mr_amt" type="number" step="0.01" min="0" placeholder="如：25.5" value="'+mRecAmt+'">';
   h+='<label>备注</label><input id="mr_note" value="'+esc(mRecNote)+'" placeholder="如：早餐 包子豆浆">';
   h+='<label class="chkrow"><input type="checkbox" id="mr_imp" '+(mRecImpulse?'checked':'')+' onchange="mRecImpulse=this.checked"> 这笔是冲动消费</label>';
@@ -4294,7 +4307,8 @@ function setMRecType(id){
   const a=document.getElementById('mr_amt');if(a)mRecAmt=a.value;
   const n=document.getElementById('mr_note');if(n)mRecNote=n.value;
   const i=document.getElementById('mr_imp');if(i)mRecImpulse=i.checked;
-  mRecType=id;renderMoneyModal();
+  mRecType=id;
+  document.querySelectorAll('#mr_types .chip').forEach(ch=>ch.classList.toggle('on',ch.getAttribute('data-t')===id));
 }
 function saveMoney(){
   const date=document.getElementById('mr_date').value||todayStr();
@@ -4469,6 +4483,13 @@ function delMember(id){if(!confirm('确定删除这个会员？'))return;S.membe
 let dEditId=null, dPrice='', dBuy='', dEnd='', dEst='', dCat='护肤品', dAvg=false;
 let dCatFilter='全部';
 const DAILY_CAT_PRESET=['护肤品','化妆品','洗漱用品','文具'];
+// 用户可见类别 = 自建类别(可删改) ∪ 数据里出现过的类别，去重
+function getDailyCats(){
+  const base=((S.dailyCats&&S.dailyCats.length)?S.dailyCats:DAILY_CAT_PRESET.slice()).slice();
+  const seen=new Set(base);
+  (S.dailies||[]).forEach(d=>{if(d.cat)seen.add(d.cat);});
+  return Array.from(seen);
+}
 function dailyDone(name){
   return (S.dailies||[]).filter(d=>d.name===name&&d.endDate);
 }
@@ -4546,8 +4567,9 @@ function renderMoneyDaily(){
   const using=(S.dailies||[]).filter(d=>!d.endDate&&!d.avgOnly);
   const avg=(S.dailies||[]).filter(d=>d.avgOnly);
   const done=(S.dailies||[]).filter(d=>d.endDate);
-  const cats=['全部'].concat((S.dailies||[]).map(d=>d.cat).filter((v,i,arr)=>v&&arr.indexOf(v)===i));
-  let h='<div class="actbar">'+cats.map(c=>'<button class="chip '+(dCatFilter===c?'on':'')+'" onclick="dCatFilter=\''+c+'\';render()">'+esc(c)+'</button>').join('')+'</div>';
+  const cats=['全部'].concat(getDailyCats());
+  let h='<div class="actbar cats-scroll">'+cats.map(c=>'<button class="chip'+(dCatFilter===c?' on':'')+'" onclick="dCatFilter=\''+c+'\';render()">'+esc(c)+'</button>').join('')
+    +'<button class="chip manage" onclick="showDailyCatManage()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> 类别管理</button></div>';
   h+='<div class="ex-total"><div class="l">使用中 '+using.length+' · 按平均 '+avg.length+' · 已用完 '+done.length+'</div><div class="v">¥'+moneyFmt(dailyTotalCost())+'</div><div class="s">今日日用品成本</div></div>';
   h+='<button class="newbtn" onclick="showDaily(null)">＋ 添加日用品</button>';
   if(!(S.dailies||[]).length){h+='<div class="money-empty">还没有日用品<br>把洗发水、牙膏、纸巾等记录进来，按每天多少钱统计</div>';return h;}
@@ -4571,7 +4593,7 @@ function renderMoneyDaily(){
 function showDaily(id){
   const d=id?(S.dailies||[]).find(x=>x.id===id):null;
   dEditId=id||null;dPrice=d?(String(d.price)):'';dBuy=d?(d.buyDate||''):todayStr();dEnd=d?(d.endDate||''):'';dEst=d?(d.estEndDate||''):'';dCat=d?(d.cat||'护肤品'):'护肤品';dAvg=!!(d&&d.avgOnly);
-  const cats=DAILY_CAT_PRESET.concat((S.dailies||[]).map(x=>x.cat).filter((v,i,arr)=>v&&arr.indexOf(v)===i));
+  const cats=getDailyCats();
   let h='<h3>'+(id?'编辑':'添加')+'日用品</h3>';
   h+='<label>名称（同款自动合并统计，建议带规格如"洗发水 500ml"）</label><input id="d_name" value="'+esc(d?d.name:'')+'" placeholder="如：洗发水、牙膏、纸巾">';
   h+='<label>价格（元）</label><input id="d_price" type="number" min="0" step="0.01" value="'+esc(dPrice)+'">';
@@ -4622,6 +4644,36 @@ function saveDailyEnd(id){
 function delDaily(id){if(!confirm('确定删除这条日用品记录？'))return;
   S.dailies=(S.dailies||[]).filter(x=>x.id!==id);
   save();render();
+}
+// ---- 日用品类别管理（系统自带类别可改名 / 删除 / 新增） ----
+function showDailyCatManage(){
+  let h='<h3>日用品类别管理</h3><div class="catlist">';
+  getDailyCats().forEach(c=>{
+    h+='<div class="c"><input value="'+esc(c)+'" onchange="renameDailyCat(this,\''+esc(c).replace(/'/g,'\\\'')+'\')" style="flex:1;min-width:0;border:none;background:transparent;font-size:13px;color:inherit"> <b onclick="delDailyCat(\''+esc(c).replace(/'/g,'\\\'')+'\')">✕</b></div>';
+  });
+  h+='</div><label>新增类别</label><input id="dc_new" placeholder="如：纸巾"><div class="row"><button class="no" onclick="closeModal()">关闭</button><button class="ok" onclick="addDailyCat()">添加</button></div>';
+  modal(h);
+}
+function addDailyCat(){
+  const v=(document.getElementById('dc_new').value||'').trim();
+  if(!v){alert('请输入类别名');return;}
+  S.dailyCats=S.dailyCats||[];
+  if(!S.dailyCats.includes(v)){S.dailyCats.push(v);save();}
+  showDailyCatManage();
+}
+function renameDailyCat(inp,old){
+  const v=(inp.value||'').trim();
+  if(!v||v===old)return;
+  S.dailyCats=(S.dailyCats||[]).map(x=>x===old?v:x);
+  (S.dailies||[]).forEach(d=>{if(d.cat===old)d.cat=v;});
+  save();showDailyCatManage();
+}
+function delDailyCat(c){
+  if(!confirm('确定删除类别「'+c+'」？该类别下的日用品会移到「未分类」。'))return;
+  S.dailyCats=(S.dailyCats||[]).filter(x=>x!==c);
+  (S.dailies||[]).forEach(d=>{if(d.cat===c)d.cat='未分类';});
+  if(dCatFilter===c)dCatFilter='全部';
+  save();render();showDailyCatManage();
 }
 
 // ---- 存钱计划 ----
@@ -4969,7 +5021,12 @@ function bindTaskDrag(){
 }
 
 // ---------- 操作 ----------
-function toggleView(){view=view==='pool'?'today':'pool';render();}
+function toggleView(){
+  view=view==='pool'?'today':'pool';
+  const v=document.getElementById('view');
+  if(v){v.classList.remove('swap');void v.offsetWidth;v.classList.add('swap');}
+  render();
+}
 function toggleFilter(){filterOpen=!filterOpen;render();}
 function setFilter(c){filterCat=c;render();}
 function toggleSort(){sortMode=sortMode==='deadline'?'default':'deadline';render();}
@@ -5286,7 +5343,7 @@ bindSwipe();
 autoSyncCheck();
 autoCloudCheck();
 setInterval(function(){autoSyncCheck();autoCloudCheck();},60000);
-const APP_VER='v4.1';  // 版本号：与 git 标签同步，发版时更新
+const APP_VER='v4.2';  // 版本号：与 git 标签同步，发版时更新
 document.getElementById('appVer').textContent=APP_VER;
 </script>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script>
