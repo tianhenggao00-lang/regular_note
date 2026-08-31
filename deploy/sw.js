@@ -1,4 +1,4 @@
-/* 自律小记 PWA Service Worker - V3 */
+/* 自律小记 PWA Service Worker - V3.1（网络优先策略） */
 const CACHE_NAME = 'zlj-app-v4-2';
 const ASSETS = [
   './',
@@ -24,20 +24,39 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// 请求：缓存优先，回退网络
+// 请求策略：
+// - 页面导航（HTML）→ 网络优先：永远拿最新页面，离线时才回退缓存
+// - 其他静态资源 → 缓存优先 + 后台更新
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  if (url.origin !== location.origin) return;
+
+  // 页面导航：网络优先
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then((res) => {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
+        return res;
+      }).catch(() =>
+        caches.match(e.request).then((hit) => hit || caches.match('./index.html'))
+      )
+    );
+    return;
+  }
+
+  // 其他资源：缓存优先，命中后后台拉新并更新缓存
   e.respondWith(
     caches.match(e.request).then((hit) => {
-      if (hit) return hit;
-      return fetch(e.request).then((res) => {
-        // 只缓存同源 GET 成功响应
-        if (res && res.status === 200 && new URL(e.request.url).origin === location.origin) {
+      const net = fetch(e.request).then((res) => {
+        if (res && res.status === 200) {
           const clone = res.clone();
           caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
         }
         return res;
-      });
+      }).catch(() => hit);
+      return hit || net;
     })
   );
 });
