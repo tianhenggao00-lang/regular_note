@@ -1,29 +1,69 @@
-# 自律小记（zlj-app）
+# 液态玻璃风格改造总结
 
-个人自律追踪 App 的源码仓库，用于**版本管理 + GitHub 远程备份**，避免本地代码丢失。
+## ✅ 已完成的工作
 
-## 项目背景
-- **本地仓库位置**：`D:\100_code\110_regular_note`（本目录，D 盘项目区，与 C 盘 WorkBuddy 工作区分离）
-- 设计稿：WorkBuddy Ardot「自律App_移动端设计稿」
-- 平台：Android 高保真移动端（后续可装壳 / 直接以整段 HTML 当 PWA 用）
-- 任务模型：待办池 + 今日任务两栏；长线任务（按个数 / 进度条）/ 短线任务（完成-未完成，未完可勾「明日回池」）
+### 1. 代码备份
+- **本地仓库**: `D:/100_code/110_regular_note`
+- **GitHub仓库**: https://github.com/tianhenggao00-lang/regular_note
+- **原文件**: `page.html` (276KB) - 已完整保存
 
-## 核心外设目标：日记导入 Obsidian
-App 的「日记 / 每日总结」模块需要支持**导出为 Markdown，导入到 Obsidian** 做长期知识管理：
-- Obsidian 库路径：`D:\500_else\520_Obsidian_record\personal_record`
-- 目标落盘目录：`005日记`（或 `日记`）——导入时按 Obsidian 的文件夹命名约定放置
-- 导出格式：每篇日记一个 `.md` 文件，含 YAML frontmatter（日期、心情、标签等），正文为纯文本 / Markdown
-- 设计阶段要预留：日记数据模型需便于序列化为 md；导出入口放在「每日总结 / 日记」页面
+### 2. 液态玻璃风格改造
 
-## 代码结构
-- 以纯 HTML 形式存放源码，手机添加到主屏幕即可当 App 使用。
-- 后续模块：今日、任务中枢、记录中心（八宫格）、习惯年度视图。
+#### 核心设计元素
+| 特性 | 实现方式 |
+|------|----------|
+| 半透明磨砂玻璃 | `backdrop-filter: blur(20px) saturate(180%)` |
+| 平滑动画 | `transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)` |
+| 悬停微动效果 | `transform: translateY(-2px)` |
+| 双主题支持 | 亮色/暗色自动切换 |
+| 光晕阴影 | `box-shadow` + 内发光 |
 
-## 备份策略
-- 本地 git 仓库（本目录 `.git`）
-- 远程：`origin` 指向 GitHub 私有仓库，定期 `git push` 防本地丢失
+#### 改造的组件
+- ✅ Header 导航栏
+- ✅ 主按钮（newbtn）
+- ✅ 卡片容器（card）
+- ✅ 导航栏（nav）
+- ✅ 弹窗遮罩（mask）
+- ✅ 按钮样式（btn）
+- ✅ 标签芯片（chip）
+- ✅ 输入框（input/select/textarea）
+- ✅ 快捷卡片（ov）
+- ✅ 记录中心宫格（rgc）
+- ✅ 子菜单（mc）
+- ✅ 习惯卡片（hcard）
+- ✅ 饮食记录卡片
+- ✅ 睡眠图表容器
+- ✅ 时间线容器
+- ✅ 备忘录/纪念日卡片
+- ✅ 其他卡片
+- ✅ 常用活动卡片
+- ✅ 饮水记录按钮
+- ✅ 快捷框（qbox）
+- ✅ 年视图热力图（yv-wrap）
 
-## 使用
-1. 克隆 / 拉取最新：`git pull`
-2. 改完提交：`git add -A && git commit -m "..."`
-3. 推送：`git push`
+---
+
+## 🎨 预览效果
+
+液态玻璃预览页面：`C:/Users/slow_rabbit/liquid_glass_preview.html`
+
+**主题切换**: 点击右上角月亮/太阳图标切换亮暗主题
+
+---
+
+## 📁 文件位置
+
+| 用途 | 路径 |
+|------|------|
+| 原代码 | `D:/100_code/110_regular_note/page.html` |
+| 预览页面 | `C:/Users/slow_rabbit/liquid_glass_preview.html` |
+| GitHub | https://github.com/tianhenggao00-lang/regular_note |
+
+---
+
+## 🚀 下一步
+
+你可以：
+1. 直接在浏览器中打开 `page.html` 查看效果
+2. 修改 CSS 样式进一步定制
+3. 在 GitHub 上继续编辑或协作
