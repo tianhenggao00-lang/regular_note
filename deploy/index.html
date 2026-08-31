@@ -169,6 +169,26 @@ body.dark-disabled .half{background:#1e2125;border-color:#2a2e33}
   background:rgba(243,244,246,0.6) !important;
   color:#6b7280;
 }
+/* 分段控件：顶部 Tab 统一样式，选中项滑动高亮块 */
+.segc{--n:2;--i:0;position:relative;display:flex;padding:3px;border-radius:14px;background:rgba(255,255,255,0.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.85);box-shadow:inset 0 1px 0 rgba(255,255,255,0.9);margin:-4px 0 10px}
+.segc button{flex:1;position:relative;z-index:1;padding:7px 0;border:none;background:none;font-size:13px;color:#6b7280;cursor:pointer;border-radius:11px;transition:color .25s;white-space:nowrap}
+.segc button.on{color:#fff;font-weight:600}
+.segc .hl{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/var(--n));border-radius:11px;background:linear-gradient(135deg,#5B82A6,#7FA8C6);box-shadow:0 2px 10px rgba(91,130,166,.35);transition:transform .3s cubic-bezier(.4,0,.2,1);transform:translateX(calc(var(--i)*100%))}
+/* 颜色选择色块：内联背景色优先（不用 !important，避免覆盖） */
+.clr{
+  width:30px;height:30px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.9);
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
+  cursor:pointer;
+  padding:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:13px;color:#fff;
+  transition:transform .2s,box-shadow .2s;
+  flex-shrink:0;
+}
+.clr.sel{transform:scale(1.15);box-shadow:0 0 0 2px #1f2329,0 2px 6px rgba(0,0,0,0.2)}
+.clr:active{transform:scale(.92)}
+body.dark-disabled .clr{border-color:rgba(255,255,255,0.3)}
 body.dark-disabled .chip{
   background:rgba(42,46,68,0.6) !important;
   color:#a5b4fc;
@@ -2123,61 +2143,10 @@ function showCalMark(){
   const cdM=calDate||todayStr();
   const anOn=(S.anniversaries||[]).filter(a=>a.type==='year'?a.date===cdM.slice(5):a.date===cdM);
   if(anOn.length)h+='<div class="cal-anniv-tip">当天纪念日：'+anOn.map(a=>'<span class="cal-anniv-lk" style="color:'+a.color+'" onclick="closeModal();showAnniv(\''+a.id+'\')">'+esc(a.name)+'</span>').join('、')+'</div>';
-  h+='<div class="cal-anniv-add">'
-    +'<div class="caa-title">在这一天添加纪念日</div>'
-    +'<input id="ann_name2" placeholder="名称（如：生日、考试）">'
-    +'<label>类型（选哪一种）</label>'
-    +'<div class="seg" id="ann_type2">'+annivTypeBtns(annivType2)+'</div>'
-    +'<div id="ann_date_wrap2">'+annivDateCtrl2(annivType2)+'</div>'
-    +'<input id="ann_note2" placeholder="备注（选填）">'
-    +'<label>颜色</label><div class="filterbar" id="ann_colors2">'+COLOR_PALETTE.map(c=>'<button class="chip" style="background:'+c+';color:#fff" onclick="setAnnivColor2(\''+c+'\')">'+(annivColor2===c?'✓':'')+'</button>').join('')+'</div>'
-    +'<button class="newbtn" style="margin-top:4px" onclick="saveAnnivFromCal()">保存纪念日</button>'
-    +'</div>';
+  h+='<div class="cal-anniv-add"><button class="newbtn" style="margin:4px 0" onclick="closeModal();showAnniv(null,calDate||todayStr())">＋ 添加纪念日</button></div>';
   h+='<div class="row"><button class="no" onclick="closeModal()">取消</button><button class="ok" onclick="saveCalMark()">保存</button></div>';
   h+='<div style="text-align:center;margin-top:10px"><button class="chip manage" onclick="showMarkManage()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>管理备忘类别（名称 / 颜色）</button></div>';
   modal(h);
-}
-function annivDateCtrl2(type){
-  const cd=calDate||todayStr();
-  if(type==='year'){
-    const mm=cd.slice(5,7), dd=cd.slice(8);
-    let o1='';for(let i=1;i<=12;i++)o1+='<option value="'+String(i).padStart(2,'0')+'"'+(String(i).padStart(2,'0')===mm?' selected':'')+'>'+i+'月</option>';
-    let o2='';for(let i=1;i<=31;i++)o2+='<option value="'+String(i).padStart(2,'0')+'"'+(String(i).padStart(2,'0')===dd?' selected':'')+'>'+i+'日</option>';
-    return '<label>日期（每年该日）</label><div class="row"><select id="ann_mm2" style="flex:1">'+o1+'</select><select id="ann_dd2" style="flex:1">'+o2+'</select></div>';
-  }
-  if(type==='week'){
-    const month=5,n=2,wd=0;
-    let om='';for(let i=1;i<=12;i++)om+='<option value="'+i+'"'+(i===month?' selected':'')+'>'+i+'月</option>';
-    const wn=['一','二','三','四','五'];
-    let on='';for(let i=1;i<=5;i++)on+='<option value="'+i+'"'+(i===n?' selected':'')+'>第'+wn[i-1]+'个</option>';
-    const wd2=['日','一','二','三','四','五','六'];
-    let ow='';for(let i=0;i<7;i++)ow+='<option value="'+i+'"'+(i===wd?' selected':'')+'>星期'+wd2[i]+'</option>';
-    return '<label>浮动规则（每年第 N 个星期 X）</label><div class="row"><select id="ann_month2" style="flex:1">'+om+'</select><select id="ann_n2" style="flex:1.1">'+on+'</select><select id="ann_wd2" style="flex:1.3">'+ow+'</select></div>';
-  }
-  return '<label>日期</label><input id="ann_once2" type="date" value="'+esc(cd)+'">';
-}
-function setAnnivType2(tp){
-  annivType2=tp;
-  const el=document.getElementById('ann_type2');
-  if(el)el.innerHTML=annivTypeBtns(tp);
-  const w=document.getElementById('ann_date_wrap2');
-  if(w)w.innerHTML=annivDateCtrl2(tp);
-}
-function setAnnivColor2(c){
-  annivColor2=c;
-  const el=document.getElementById('ann_colors2');
-  if(el)el.innerHTML=COLOR_PALETTE.map(cc=>'<button class="chip" style="background:'+cc+';color:#fff" onclick="setAnnivColor2(\''+cc+'\')">'+(annivColor2===cc?'✓':'')+'</button>').join('');
-}
-function saveAnnivFromCal(){
-  const name=document.getElementById('ann_name2').value.trim();
-  if(!name){alert('请输入名称');return;}
-  let date='', month=0,n=0,wday=0;
-  if(annivType2==='year')date=document.getElementById('ann_mm2').value+'-'+document.getElementById('ann_dd2').value;
-  else if(annivType2==='week'){month=parseInt(document.getElementById('ann_month2').value,10);n=parseInt(document.getElementById('ann_n2').value,10);wday=parseInt(document.getElementById('ann_wd2').value,10);}
-  else{date=document.getElementById('ann_once2').value||'';if(!date){alert('请选择日期');return;}}
-  S.anniversaries=S.anniversaries||[];
-  S.anniversaries.push({id:uid(),name,type:annivType2,date,month,n,wday,color:annivColor2,note:document.getElementById('ann_note2').value.trim()});
-  save();showCalMark();
 }
 function setCalMark(id){
   const cd=calDate||todayStr();
@@ -2218,14 +2187,14 @@ function editMark(id){
 function renderMarkEdit(){
   let h='<h3>'+(mkEditId?'编辑':'新建')+'备忘类别</h3>';
   h+='<label>名称</label><input id="mkt_name" value="'+esc(mkName)+'" placeholder="如：考试、生日、聚会">';
-  h+='<label>颜色</label><div class="filterbar" id="mkt_colors">'+COLOR_PALETTE.map(c=>'<button class="chip" style="background:'+c+';color:#fff" onclick="setMkColor(\''+c+'\')">'+(mkColor===c?'✓':'')+'</button>').join('')+'</div>';
+  h+='<label>颜色</label><div class="filterbar" id="mkt_colors">'+COLOR_PALETTE.map(c=>'<button class="clr'+(mkColor===c?' sel':'')+'" style="background:'+c+'" onclick="setMkColor(\''+c+'\')">'+(mkColor===c?'✓':'')+'</button>').join('')+'</div>';
   h+='<div class="row"><button class="no" onclick="showMarkManage()">返回</button><button class="ok" onclick="saveMark()">保存</button></div>';
   modal(h);
 }
 function setMkColor(c){
   mkColor=c;
   const el=document.getElementById('mkt_colors');
-  if(el)el.innerHTML=COLOR_PALETTE.map(cc=>'<button class="chip" style="background:'+cc+';color:#fff" onclick="setMkColor(\''+cc+'\')">'+(mkColor===cc?'✓':'')+'</button>').join('');
+  if(el)el.innerHTML=COLOR_PALETTE.map(cc=>'<button class="clr'+(mkColor===cc?' sel':'')+'" style="background:'+cc+'" onclick="setMkColor(\''+cc+'\')">'+(mkColor===cc?'✓':'')+'</button>').join('');
 }
 function saveMark(){
   const name=document.getElementById('mkt_name').value.trim();
@@ -2270,6 +2239,14 @@ function recTitle(v){
   if(r)return r.name;
   return {other:'其他',memo:'备忘录',anniv:'纪念日',medical:'电子病历',inspiration:'灵感库',schedule:'时间表'}[v]||'';
 }
+// 分段控件：items=[{id,name}], active=当前id, fn=点击回调函数名(带引号包裹id)
+function segc(items,active,fn){
+  const n=items.length, i=Math.max(0,items.findIndex(x=>x.id===active));
+  let h='<div class="segc" style="--n:'+n+';--i:'+i+'">';
+  h+=items.map(x=>'<button class="'+(x.id===active?'on':'')+'" onclick="'+fn+'(\''+x.id+'\')">'+x.name+'</button>').join('');
+  h+='<div class="hl"></div></div>';
+  return h;
+}
 function renderRecord(){
   S.sleep=S.sleep||[];
   S.activity=S.activity||[];
@@ -2309,7 +2286,7 @@ function setRecView(t){
   if(t==='summary')sumDate=todayStr();
   render();
 }
-function setSleepRange(n){sleepRange=n;render();}
+function setSleepRange(n){sleepRange=+n;render();}
 
 // ---------- 导出到 Obsidian（完整每日笔记，合并为单个 .md） ----------
 function clTypeName(id){const t=(DEF_CL_TYPES||[]).find(x=>x.id===id);return t?t.name:id;}
@@ -2724,7 +2701,6 @@ function renderOther(){
 
 // ---- 纪念日 ----
 let annivEditId=null,annivCurType='year',annivColor='#ef4444';
-let annivType2='year',annivColor2='#ef4444';
 function annivWeekDate(a,year){
   const fd=new Date(year,a.month-1,1).getDay();
   let day=1+((a.wday-fd)+7)%7;
@@ -2787,9 +2763,10 @@ function renderAnniv(){
   return h;
 }
 function setPinnedAnniv(id){S.pinnedAnniv=(S.pinnedAnniv===id?'':id);save();render();}
-function annivDateCtrl(type,a){
+function annivDateCtrl(type,a,presetDate){
+  const pd=presetDate||'';
   if(type==='year'){
-    const md=a?a.date:'';
+    const md=a?a.date:(pd?pd.slice(5):'');
     const mm=md?md.slice(0,2):'01',dd=md?md.slice(3,5):'01';
     let o1='';for(let i=1;i<=12;i++)o1+='<option value="'+String(i).padStart(2,'0')+'"'+(String(i).padStart(2,'0')===mm?' selected':'')+'>'+i+'月</option>';
     let o2='';for(let i=1;i<=31;i++)o2+='<option value="'+String(i).padStart(2,'0')+'"'+(String(i).padStart(2,'0')===dd?' selected':'')+'>'+i+'日</option>';
@@ -2804,21 +2781,21 @@ function annivDateCtrl(type,a){
     let ow='';for(let i=0;i<7;i++)ow+='<option value="'+i+'"'+(i===wd?' selected':'')+'>星期'+wd2[i]+'</option>';
     return '<label>浮动规则（每年第 N 个星期 X）</label><div class="row"><select id="ann_month" style="flex:1">'+om+'</select><select id="ann_n" style="flex:1.1">'+on+'</select><select id="ann_wd" style="flex:1.3">'+ow+'</select></div>';
   }
-  return '<label>日期</label><input id="ann_once" type="date" value="'+esc(a?a.date:'')+'">';
+  return '<label>日期</label><input id="ann_once" type="date" value="'+esc(a?a.date:(pd||''))+'">';
 }
 function annivTypeBtns(cur){
   const tps=[['year','每年循环'],['week','每年浮动'],['once','仅一次']];
   return tps.map(t=>'<button class="'+(cur===t[0]?'on':'')+'" onclick="setAnnivType(\''+t[0]+'\')">'+t[1]+'</button>').join('');
 }
-function showAnniv(id){
+function showAnniv(id,presetDate){
   const a=id?S.anniversaries.find(x=>x.id===id):null;
   annivEditId=id||null;annivCurType=a?a.type:'year';annivColor=a?a.color:'#ef4444';
   let h='<h3>'+(id?'编辑':'添加')+'纪念日</h3>';
   h+='<label>名称</label><input id="ann_name" value="'+esc(a?a.name:'')+'" placeholder="如：生日、周年、考试">';
   h+='<label>类型</label><div class="seg" id="ann_type">'+annivTypeBtns(annivCurType)+'</div>';
-  h+='<div id="ann_date_wrap">'+annivDateCtrl(annivCurType,a)+'</div>';
+  h+='<div id="ann_date_wrap">'+annivDateCtrl(annivCurType,a,presetDate)+'</div>';
   h+='<label>备注</label><input id="ann_note" value="'+esc(a?a.note:'')+'" placeholder="选填">';
-  h+='<label>颜色</label><div class="filterbar" id="ann_colors">'+COLOR_PALETTE.map(c=>'<button class="chip" style="background:'+c+';color:#fff" onclick="setAnnivColor(\''+c+'\')">'+(annivColor===c?'✓':'')+'</button>').join('')+'</div>';
+  h+='<label>颜色</label><div class="filterbar" id="ann_colors">'+COLOR_PALETTE.map(c=>'<button class="clr'+(annivColor===c?' sel':'')+'" style="background:'+c+'" onclick="setAnnivColor(\''+c+'\')">'+(annivColor===c?'✓':'')+'</button>').join('')+'</div>';
   h+='<div class="row"><button class="no" onclick="closeModal()">取消</button><button class="ok" onclick="saveAnniv()">保存</button></div>';
   modal(h);
 }
@@ -2829,7 +2806,7 @@ function setAnnivType(tp){
   const w=document.getElementById('ann_date_wrap');
   if(w)w.innerHTML=annivDateCtrl(tp,annivEditId?(S.anniversaries.find(x=>x.id===annivEditId)||null):null);
 }
-function setAnnivColor(c){annivColor=c;const el=document.getElementById('ann_colors');if(el)el.innerHTML=COLOR_PALETTE.map(cc=>'<button class="chip" style="background:'+cc+';color:#fff" onclick="setAnnivColor(\''+cc+'\')">'+(annivColor===cc?'✓':'')+'</button>').join('');}
+function setAnnivColor(c){annivColor=c;const el=document.getElementById('ann_colors');if(el)el.innerHTML=COLOR_PALETTE.map(cc=>'<button class="clr'+(annivColor===cc?' sel':'')+'" style="background:'+cc+'" onclick="setAnnivColor(\''+cc+'\')">'+(annivColor===cc?'✓':'')+'</button>').join('');}
 function saveAnniv(){
   const name=document.getElementById('ann_name').value.trim();
   if(!name){alert('请输入名称');return;}
@@ -3033,10 +3010,7 @@ function renderSleep(){
   }
 
   // 1) 范围切换
-  html+='<div class="filterbar" style="justify-content:center;margin:-4px 0 10px">';
-  html+='<button class="chip '+(sleepRange===7?'on':'')+'" onclick="setSleepRange(7)">近 7 天</button>';
-  html+='<button class="chip '+(sleepRange===30?'on':'')+'" onclick="setSleepRange(30)">近 30 天</button>';
-  html+='</div>';
+  html+=segc([{id:'7',name:'近 7 天'},{id:'30',name:'近 30 天'}],String(sleepRange),'setSleepRange');
 
   // 1) 睡眠条形图
   html+='<div class="sleep-chart">';
@@ -3633,14 +3607,14 @@ function showTypeManage(){
   getTypes().forEach(t=>{
     html+='<div class="c"><i class="dot" style="background:'+t.color+'"></i>'+t.name+' <b onclick="delType(\''+t.id+'\')">✕</b></div>';
   });
-  html+='</div><label>新增类型</label><input id="nt_name" placeholder="如：通勤"><label>颜色</label><div class="filterbar" id="nt_colors">'+COLOR_PALETTE.map(c=>'<button class="chip" style="background:'+c+';color:#fff" onclick="setNmColor(\''+c+'\')">'+(nmColor===c?'✓':'')+'</button>').join('')+'</div>';
+  html+='</div><label>新增类型</label><input id="nt_name" placeholder="如：通勤"><label>颜色</label><div class="filterbar" id="nt_colors">'+COLOR_PALETTE.map(c=>'<button class="clr'+(nmColor===c?' sel':'')+'" style="background:'+c+'" onclick="setNmColor(\''+c+'\')">'+(nmColor===c?'✓':'')+'</button>').join('')+'</div>';
   html+='<div class="row"><button class="no" onclick="closeModal()">关闭</button><button class="ok" onclick="addType()">添加</button></div>';
   modal(html);
 }
 function setNmColor(c){
   nmColor=c;
   const el=document.getElementById('nt_colors');
-  if(el)el.innerHTML=COLOR_PALETTE.map(cc=>'<button class="chip" style="background:'+cc+';color:#fff" onclick="setNmColor(\''+cc+'\')">'+(nmColor===cc?'✓':'')+'</button>').join('');
+  if(el)el.innerHTML=COLOR_PALETTE.map(cc=>'<button class="clr'+(nmColor===cc?' sel':'')+'" style="background:'+cc+'" onclick="setNmColor(\''+cc+'\')">'+(nmColor===cc?'✓':'')+'</button>').join('');
 }
 function addType(){
   const name=document.getElementById('nt_name').value.trim();
@@ -4004,10 +3978,7 @@ let exEditId=null, exDate='', exTypeId='run', exStart='19:00', exEnd='19:30';
 
 function renderExercise(){
   S.exercise=S.exercise||[];
-  let h='<div class="actbar">';
-  h+='<button class="chip '+(exSub==='today'?'on':'')+'" onclick="setExSub(\'today\')">今日记录</button>';
-  h+='<button class="chip '+(exSub==='week'?'on':'')+'" onclick="setExSub(\'week\')">一周情况</button>';
-  h+='</div>';
+  let h=segc([{id:'today',name:'今日记录'},{id:'week',name:'一周情况'}],exSub,'setExSub');
   h+=(exSub==='today')?renderExToday():renderExWeek();
   return h;
 }
@@ -4204,14 +4175,14 @@ function showExTypeManage(){
   getExTypes().forEach(t=>{
     h+='<div class="c"><i class="dot" style="background:'+t.color+'"></i>'+t.name+' <b onclick="delExType(\''+t.id+'\')">✕</b></div>';
   });
-  h+='</div><label>新增类型</label><input id="nxt_name" placeholder="如：游泳"><label>颜色</label><div class="filterbar" id="nxt_colors">'+COLOR_PALETTE.map(c=>'<button class="chip" style="background:'+c+';color:#fff" onclick="setExNmColor(\''+c+'\')">'+(exNmColor===c?'✓':'')+'</button>').join('')+'</div>';
+  h+='</div><label>新增类型</label><input id="nxt_name" placeholder="如：游泳"><label>颜色</label><div class="filterbar" id="nxt_colors">'+COLOR_PALETTE.map(c=>'<button class="clr'+(exNmColor===c?' sel':'')+'" style="background:'+c+'" onclick="setExNmColor(\''+c+'\')">'+(exNmColor===c?'✓':'')+'</button>').join('')+'</div>';
   h+='<div class="row"><button class="no" onclick="closeModal()">关闭</button><button class="ok" onclick="addExType()">添加</button></div>';
   modal(h);
 }
 function setExNmColor(c){
   exNmColor=c;
   const el=document.getElementById('nxt_colors');
-  if(el)el.innerHTML=COLOR_PALETTE.map(cc=>'<button class="chip" style="background:'+cc+';color:#fff" onclick="setExNmColor(\''+cc+'\')">'+(exNmColor===cc?'✓':'')+'</button>').join('');
+  if(el)el.innerHTML=COLOR_PALETTE.map(cc=>'<button class="clr'+(exNmColor===cc?' sel':'')+'" style="background:'+cc+'" onclick="setExNmColor(\''+cc+'\')">'+(exNmColor===cc?'✓':'')+'</button>').join('');
 }
 function addExType(){
   const name=document.getElementById('nxt_name').value.trim();
@@ -4252,13 +4223,7 @@ let mPlanEditId=null, mPlanType='food', mPlanMode='daily', mPlanPrice='';
 function renderMoney(){
   S.moneyRecords=S.moneyRecords||[];
   S.moneyPlans=S.moneyPlans||[];
-  let h='<div class="actbar tight">';
-  h+='<button class="chip '+(moneySub==='flow'?'on':'')+'" onclick="setMoneySub(\'flow\')">今日</button>';
-  h+='<button class="chip '+(moneySub==='plan'?'on':'')+'" onclick="setMoneySub(\'plan\')">月度</button>';
-  h+='<button class="chip '+(moneySub==='asset'?'on':'')+'" onclick="setMoneySub(\'asset\')">资产</button>';
-  h+='<button class="chip '+(moneySub==='daily'?'on':'')+'" onclick="setMoneySub(\'daily\')">日用品</button>';
-  h+='<button class="chip '+(moneySub==='save'?'on':'')+'" onclick="setMoneySub(\'save\')">存钱</button>';
-  h+='</div>';
+  let h=segc([{id:'flow',name:'今日'},{id:'plan',name:'月度'},{id:'asset',name:'资产'},{id:'daily',name:'日用品'},{id:'save',name:'存钱'}],moneySub,'setMoneySub');
   h+=(moneySub==='flow')?renderMoneyFlow():(moneySub==='plan')?renderMoneyPlan():(moneySub==='asset')?renderMoneyAsset():(moneySub==='daily')?renderMoneyDaily():renderMoneySave();
   return h;
 }
@@ -4698,14 +4663,14 @@ function showMoneyTypeManage(){
   getMoneyTypes().forEach(t=>{
     h+='<div class="c"><i class="dot" style="background:'+t.color+'"></i>'+t.name+' <b onclick="delMoneyType(\''+t.id+'\')">✕</b></div>';
   });
-  h+='</div><label>新增类型</label><input id="nmt_name" placeholder="如：宠物"><label>颜色</label><div class="filterbar" id="nmt_colors">'+COLOR_PALETTE.map(c=>'<button class="chip" style="background:'+c+';color:#fff" onclick="setMnNmColor(\''+c+'\')">'+(mnNmColor===c?'✓':'')+'</button>').join('')+'</div>';
+  h+='</div><label>新增类型</label><input id="nmt_name" placeholder="如：宠物"><label>颜色</label><div class="filterbar" id="nmt_colors">'+COLOR_PALETTE.map(c=>'<button class="clr'+(mnNmColor===c?' sel':'')+'" style="background:'+c+'" onclick="setMnNmColor(\''+c+'\')">'+(mnNmColor===c?'✓':'')+'</button>').join('')+'</div>';
   h+='<div class="row"><button class="no" onclick="closeModal()">关闭</button><button class="ok" onclick="addMoneyType()">添加</button></div>';
   modal(h);
 }
 function setMnNmColor(c){
   mnNmColor=c;
   const el=document.getElementById('nmt_colors');
-  if(el)el.innerHTML=COLOR_PALETTE.map(cc=>'<button class="chip" style="background:'+cc+';color:#fff" onclick="setMnNmColor(\''+cc+'\')">'+(mnNmColor===cc?'✓':'')+'</button>').join('');
+  if(el)el.innerHTML=COLOR_PALETTE.map(cc=>'<button class="clr'+(mnNmColor===cc?' sel':'')+'" style="background:'+cc+'" onclick="setMnNmColor(\''+cc+'\')">'+(mnNmColor===cc?'✓':'')+'</button>').join('');
 }
 function addMoneyType(){
   const name=document.getElementById('nmt_name').value.trim();
@@ -4741,11 +4706,7 @@ let clEditId=null, clType='book', clName='', clAuthor='', clDate='';
 function renderCollect(){
   S.collects=S.collects||[];
   S.hobbies=S.hobbies||[];
-  let h='<div class="actbar">';
-  DEF_CL_TYPES.forEach(t=>{
-    h+='<button class="chip '+(clTab===t.id?'on':'')+'" onclick="setClTab(\''+t.id+'\')">'+t.name+'</button>';
-  });
-  h+='</div>';
+  let h=segc(DEF_CL_TYPES.map(t=>({id:t.id,name:t.name})),clTab,'setClTab');
   if(clTab==='hobby')return h+renderHobbyList();
   h+='<button class="newbtn" onclick="showCollect()">＋ 添加收藏</button>';
   const meta=DEF_CL_TYPES.find(t=>t.id===clTab)||DEF_CL_TYPES[0];

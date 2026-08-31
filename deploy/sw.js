@@ -1,5 +1,5 @@
 /* 自律小记 PWA Service Worker - V3 */
-const CACHE_NAME = 'zlj-app-v4';
+const CACHE_NAME = 'zlj-app-v4-1';
 const ASSETS = [
   './',
   './index.html',
