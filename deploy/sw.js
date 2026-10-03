@@ -1,5 +1,5 @@
 /* 自律小记 PWA Service Worker - V3.1（网络优先策略） */
-const CACHE_NAME = 'zlj-app-v4-2';
+const CACHE_NAME = 'zlj-app-v4-3';
 const ASSETS = [
   './',
   './index.html',

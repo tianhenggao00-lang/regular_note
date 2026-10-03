@@ -174,6 +174,19 @@ body.dark-disabled .half{background:#1e2125;border-color:#2a2e33}
 .segc button{flex:1;position:relative;z-index:1;padding:7px 0;border:none;background:none;font-size:13px;color:#6b7280;cursor:pointer;border-radius:11px;transition:color .25s;white-space:nowrap}
 .segc button.on{color:#fff;font-weight:600}
 .segc .hl{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/var(--n));border-radius:11px;background:linear-gradient(135deg,#5B82A6,#7FA8C6);box-shadow:0 2px 10px rgba(91,130,166,.35);transition:transform .3s cubic-bezier(.4,0,.2,1);transform:translateX(calc(var(--i)*100%))}
+/* 周计划视图（主节奏：今日融入周，无单日失败） */
+.wk-head{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 10px}
+.wk-head .date{font-size:14px;font-weight:500;color:#1f2937}
+.wk-bar{display:flex;gap:4px;margin-bottom:12px}
+.wk-d{flex:1;text-align:center;padding:8px 0;border:1px solid rgba(0,0,0,0.08);border-radius:10px;font-size:12px;color:#6b7280;background:rgba(255,255,255,0.5);line-height:1.5;cursor:pointer}
+.wk-d b{font-weight:500;font-size:13px;color:#1f2937}
+.wk-d.today{border-color:#5B82A6;color:#5B82A6}
+.wk-d.today b{color:#5B82A6}
+.wk-d.focus{background:#5B82A6;color:#fff;border-color:#5B82A6}
+.wk-d.focus b{color:#fff}
+.wk-prog{background:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.85);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#6b7280}
+.wk-prog .bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-top:6px}
+.wk-prog .bar i{display:block;height:100%;background:#5B82A6}
 /* 颜色选择色块：内联背景色优先（不用 !important，避免覆盖） */
 .clr{
   width:30px;height:30px;border-radius:50%;
@@ -1466,7 +1479,10 @@ function find(id){return S.tasks.find(t=>t.id===id);}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 
 // 当前视图与筛选状态
-let view='pool';          // 'pool' | 'today'
+let view='pool';          // 'pool' | 'week'
+let weekFocus='';         // 周视图聚焦某天 YYYY-MM-DD，空 = 整周
+function getMonday(ds){const a=ds.split('-').map(Number);const d=new Date(a[0],a[1]-1,a[2]);const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function weekShift(n){const base=weekFocus||todayStr();weekFocus=getMonday(base);weekFocus=shiftDate(weekFocus,n*7);render();}
 let tab='today';          // 默认打开「今日」页 | 'today' | 'task' | 'record' | 'calendar'
 let filterCat='全部';
 let sortMode='default';   // 'default' | 'deadline'
@@ -1507,10 +1523,11 @@ function render(){
   if(!habitDate)habitDate=todayStr();
   if(!exViewDate)exViewDate=todayStr();
   if(!mDate)mDate=todayStr();
+  (S.tasks||[]).forEach(t=>{if(!t.cycle)t.cycle='day';if(t.planDay===undefined)t.planDay='';});
   resetStale();
   renderNav();
   const sw=document.getElementById('switchBtn');
-  sw.style.display=(tab==='task')?'flex':'none';
+  sw.style.display='none';  // 任务页改用视图内 segc 分段控件（待办池/本周）
   const v=document.getElementById('view');
   if(tab==='task') v.innerHTML=renderTask();
   else if(tab==='today') v.innerHTML=renderTodayPage();
@@ -1802,9 +1819,11 @@ function swipeSwitch(dir){
 }
 
 function renderTask(){
-  if(view==='pool') return renderPool();
-  return renderToday(taskDate);
+  let tab=segc([{id:'pool',name:'待办池'},{id:'week',name:'本周'}],view,'setTaskView');
+  let body=view==='pool'?renderPool():renderWeek();
+  return tab+body;
 }
+function setTaskView(v){view=v;render();}
 
 // ---------- 待办池 ----------
 function renderPool(){
@@ -1823,7 +1842,7 @@ function renderPool(){
     }
     return 0;
   });
-  let html='<div class="viewtitle">待办池</div>';
+  let html='';
   html+='<div class="goal-tip">按住卡片左侧 ≡ 上下拖动，可以调整顺序</div>';
   html+='<button class="newbtn" onclick="showNew()">＋ 新建任务</button>';
   html+='<div class="row2"><div class="half" onclick="toggleFilter()">按分类筛选</div><div class="half" onclick="toggleSort()">'+(sortMode==='deadline'?'按截止排序 ✓':'按截止日期排序')+'</div></div>';
@@ -1869,6 +1888,7 @@ function poolCard(t){
   }
   h+='<div class="actions">';
   h+='<button class="btn primary" '+(t.inToday||assigned?'disabled':'')+' onclick="addToday(\''+t.id+'\')">加入今日</button>';
+  h+='<button class="btn '+(t.cycle==='week'?'grey':'')+'" '+(t.cycle==='week'?'disabled':'')+' onclick="setCycleWeek(\''+t.id+'\')">加入本周</button>';
   if(assigned){
     h+='<button class="btn grey" disabled>已指派</button>';
     h+='<button class="btn" onclick="cancelAssign(\''+t.id+'\')">取消</button>';
@@ -1957,6 +1977,59 @@ function todayCard(t,vd){
   return h;
 }
 
+// ---------- 本周计划（主节奏：今日融入周，无单日失败） ----------
+function renderWeek(){
+  const today=todayStr();
+  const mon=getMonday(today), sun=shiftDate(mon,6);
+  const inWeek=t=>{
+    if(t.cycle==='week')return true;
+    if(t.inToday)return true;
+    if(t.assignedDate&&t.assignedDate>=mon&&t.assignedDate<=sun)return true;
+    if(t.doneDate&&t.doneDate>=mon&&t.doneDate<=sun)return true;
+    return false;
+  };
+  let list=S.tasks.filter(t=>{
+    if(t.status==='done'&&t.doneDate&&t.doneDate<mon)return false;  // 上周之前的已完成不显示
+    return inWeek(t);
+  });
+  if(weekFocus){  // 聚焦某天：只看落点在这一天的
+    list=list.filter(t=>t.assignedDate===weekFocus||t.planDay===weekFocus||(weekFocus===today&&t.inToday));
+  }
+  const total=list.length;
+  const done=list.filter(t=>t.doneDate&&t.doneDate>=mon&&t.doneDate<=sun).length;
+  const pct=total?Math.min(100,Math.round(done/total*100)):0;
+  let html='<div class="wk-head"><button class="nav" onclick="weekShift(-1)">‹</button><span class="date">'+mon.slice(5)+' – '+sun.slice(5)+'</span><button class="nav" onclick="weekShift(1)">›</button>';
+  if(weekFocus)html+='<button class="today" onclick="weekFocus=\'\';render()">整周</button>';
+  html+='</div>';
+  const wn=['一','二','三','四','五','六','日'];
+  html+='<div class="wk-bar">';
+  for(let k=0;k<7;k++){const ds=shiftDate(mon,k);const cls=(ds===today?' today':'')+(ds===weekFocus?' focus':'');html+='<button class="wk-d'+cls+'" onclick="weekFocus=\''+ds+'\';render()">'+wn[k]+'<br><b>'+parseInt(ds.slice(8),10)+'</b></button>';}
+  html+='</div>';
+  html+='<div class="wk-prog"><span>本周完成度 '+done+' / '+total+'</span><div class="bar"><i style="width:'+pct+'%"></i></div></div>';
+  html+='<button class="newbtn" onclick="showNew()">＋ 新建本周目标</button>';
+  if(list.length===0)html+='<div class="empty">本周还没有计划<br>去待办池点「加入本周」，或点上面「＋ 新建本周目标」</div>';
+  list.forEach(t=>{html+=weekCard(t);});
+  return html;
+}
+function weekCard(t){
+  const today=todayStr();
+  const mon=getMonday(today), sun=shiftDate(mon,6);
+  const done=t.doneDate&&t.doneDate>=mon&&t.doneDate<=sun;
+  let h='<div class="card trow'+(done?' done':'')+'">';
+  h+='<div class="top"><div style="flex:1;min-width:0"><div class="title">'+esc(t.title)+'</div><div class="type">'+(t.type==='long'?'长线任务':'短线任务')+(t.cycle==='week'?' · 本周':'')+'</div></div>';
+  h+='<div style="text-align:right"><span class="tag">'+t.category+'</span></div></div>';
+  if(t.type==='long'){const lb=longBarHTML(t);h+=lb.bar;h+='<div class="pct">'+lb.text+'</div>';}
+  if(t.planDay)h+='<div class="pct">计划 '+t.planDay.slice(5)+'</div>';
+  h+='<div class="actions">';
+  if(done)h+='<span style="color:#22c55e;font-size:13px">✓ 已完成</span><button class="btn" onclick="cancelAssign(\''+t.id+'\')">取消</button>';
+  else{
+    h+='<button class="btn green" onclick="doSuccess(\''+t.id+'\')">成功</button>';
+    h+='<button class="btn" onclick="setPlanDay(\''+t.id+'\')">落点某天</button>';
+    h+='<button class="btn" onclick="delTask(\''+t.id+'\')">删除</button>';
+  }
+  h+='</div></div>';
+  return h;
+}
 // ---------- 月历：月份切换 + 瘦长日历（数字+备注）+ 备忘（可自定义类别） + 9 框跳转 ----------
 let calDate='';        // 选中日期（初始今天，见 render 前初始化）
 let calMonth='';       // 显示的月份 'YYYY-MM'（初始当月）
@@ -5038,6 +5111,7 @@ function resetStale(){
   const d=todayStr();let ch=false;
   S.tasks.forEach(t=>{
     if(t.status==='done') return;                 // 已完成/已归档的保持不动
+    if(t.cycle==='week') return;                  // 周任务为软目标，不触发失败归档/回池结算
     if(t.failDate && t.failDate<d){              // 失败跨天结算
       if(t.type==='long'){                       // 长线任务没跑满 → 次日自动回待办池（无论是否点过次日回池）
         t.assignedDate=null;t.todayPlan=null;t.doneDate=null;t.failDate=null;t.returnNext=false;
@@ -5085,6 +5159,9 @@ function cancelAssign(id){
   save();render();
 }
 function delTask(id){if(!confirm('确定删除这个任务？'))return;S.tasks=S.tasks.filter(t=>t.id!==id);save();render();}
+function setCycleWeek(id){const t=find(id);t.cycle='week';t.inToday=false;t.assignedDate=null;t.todayPlan=null;t.doneDate=null;t.failDate=null;save();render();}
+function setPlanDay(id){modal('<h3>计划落在哪一天？</h3><input id="pd" type="date" value="'+tomorrow()+'"><div class="row"><button class="no" onclick="closeModal()">取消</button><button class="ok" onclick="doPlanDay(\''+id+'\')">确定</button></div>');}
+function doPlanDay(id){const t=find(id);t.planDay=document.getElementById('pd').value;t.cycle='week';closeModal();save();render();}
 
 function doSuccess(id){
   const t=find(id);
@@ -5136,7 +5213,7 @@ function log(id,action,ratio){S.logs.push({id,date:todayStr(),action,ratio});}
 // ---------- 新建任务 ----------
 let F={};
 function showNew(){
-  F={type:'short',category:S.cats[0],deadline:'',progress:0,title:'',longMode:'pct',total:10,done:0};
+  F={type:'short',category:S.cats[0],deadline:'',progress:0,title:'',longMode:'pct',total:10,done:0,cycle:'week'};
   renderNew();
 }
 function renderNew(){
@@ -5150,6 +5227,7 @@ function renderNew(){
   let html='<h3>新建任务</h3>';
   html+='<label>标题</label><input id="nt_title" value="'+(F.title||'')+'" placeholder="要做什么？">';
   html+='<label>任务类型</label><div class="seg"><button class="'+(F.type==='long'?'on':'')+'" onclick="setNType(\'long\')">长线（进度条）</button><button class="'+(F.type==='short'?'on':'')+'" onclick="setNType(\'short\')">短线（完成/未完成）</button></div>';
+  html+='<label>计划节奏 <span style="color:#9ca3af;font-weight:400">（本周＝一周内任意天做完都算达成）</span></label><div class="seg"><button class="'+(F.cycle!=='week'?'on':'')+'" onclick="setNCycle(\'day\')">按天</button><button class="'+(F.cycle==='week'?'on':'')+'" onclick="setNCycle(\'week\')">本周</button></div>';
   html+='<label>任务分类</label><div class="filterbar">'+cats+'</div>';
   html+='<label>截止日期</label><input id="nt_deadline" type="date" value="'+F.deadline+'" onchange="F.deadline=this.value">';
   html+='<label class="chkrow"><input type="checkbox" '+(F.nodl?'checked':'')+' onchange="F.nodl=this.checked;if(this.checked)document.getElementById(\'nt_deadline\').value=\'\'"> 设为无截止日期</label>';
@@ -5169,6 +5247,7 @@ function renderNew(){
 function setNType(t){F.type=t;renderNew();}
 function setNCat(c){F.category=c;renderNew();}
 function setNMode(m){F.longMode=m;renderNew();}
+function setNCycle(c){F.cycle=c;renderNew();}
 function saveNew(){
   const title=document.getElementById('nt_title').value.trim();
   if(!title){const e=document.getElementById('ne');if(e)e.textContent='请先填写标题';return;}
@@ -5178,7 +5257,7 @@ function saveNew(){
     if(F.longMode==='count'){prog=parseFloat(document.getElementById('nt_done').value)||0;total=Math.max(1,parseFloat(document.getElementById('nt_total').value)||1);}
     else prog=parseFloat(document.getElementById('nt_prog').value)||0;
   }
-  S.tasks.push({id:uid(),title,type:F.type,category:F.category,deadline,progress:prog,longMode:F.longMode,total,status:'active',inToday:false,assignedDate:null,todayPlan:null,doneDate:null,failDate:null,returnNext:false});
+  S.tasks.push({id:uid(),title,type:F.type,category:F.category,deadline,progress:prog,longMode:F.longMode,total,status:'active',inToday:false,assignedDate:null,todayPlan:null,doneDate:null,failDate:null,returnNext:false,cycle:F.cycle,planDay:''});
   closeModal();save();render();
 }
 
@@ -5343,13 +5422,13 @@ bindSwipe();
 autoSyncCheck();
 autoCloudCheck();
 setInterval(function(){autoSyncCheck();autoCloudCheck();},60000);
-const APP_VER='v4.2';  // 版本号：与 git 标签同步，发版时更新
+const APP_VER='v4.3';  // 版本号：与 git 标签同步，发版时更新
 document.getElementById('appVer').textContent=APP_VER;
 </script>
 <script>
 // PWA 注册：带版本号强制绕过 SW 脚本缓存，检测到新版本自动刷新
 if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js?v=4.2").then(function(reg){
+  navigator.serviceWorker.register("sw.js?v=4.3").then(function(reg){
     reg.addEventListener('updatefound',function(){
       var nw=reg.installing;
       if(nw) nw.addEventListener('statechange',function(){
